@@ -95,6 +95,7 @@ body {
     -o-transition: 0.3s border ease;
     -webkit-transition: 0.3s border ease;
     transition: 0.3s border ease;
+    object-fit: cover;
 }
 
 
@@ -382,11 +383,15 @@ body {
     border-radius: 50%;
     float: left;
     margin-right: 10px;
+    object-fit: cover;
 }
 
 
 #frame #sidepanel #contacts ul li.contact .wrap .meta {
     padding: 5px 0 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 #frame #sidepanel #contacts ul li.contact .wrap .meta .name {
@@ -414,6 +419,17 @@ body {
     padding: 0 2px 0 0;
     margin: 0 0 0 1px;
     opacity: .5;
+}
+
+.unseenNumber{
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 2px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    display: none;
 }
 
 #frame #sidepanel #bottom-bar {
@@ -498,10 +514,11 @@ body {
 
 
 #frame .content .contact-profile {
-    width: 100%;
+    width: 65.4%;
     height: 60px;
     line-height: 55px;
     background: #f5f5f5;
+    position: fixed;
 }
 
 #frame .content .contact-profile img {
@@ -510,6 +527,7 @@ body {
     border-radius: 50%;
     float: left;
     margin: 9px 12px 0 9px;
+    object-fit: cover;
 }
 
 #frame .content .contact-profile p:first-child {
@@ -536,11 +554,11 @@ body {
 }
 
 #frame .content .messages {
-    height: auto;
-    min-height: calc(100% - 93px);
-    max-height: calc(100% - 93px);
+    height: 82%;
     overflow-x: hidden;
     overflow-y: auto;
+    margin-top: 60px;
+
 }
 
 
@@ -585,7 +603,7 @@ body {
 }
 
 .dateShow p{
-    font-size: 20px;
+    font-size: 15px;
 }
 
 #frame .content .messages  li:nth-last-child(1) {
@@ -612,6 +630,7 @@ body {
 #frame .content .messages  li.sent img {
     float: right;
     margin: 6px 0 0 8px;
+    object-fit: cover;
 }
 
 #frame .content .messages  li.sent p {
@@ -620,13 +639,18 @@ body {
 }
 
 #frame .content .messages .senttime {
-    float: right;
+    /* float: right; */
     margin-right: 55px;
 }
 
 #frame .content .messages .senttime p {
     font-size: 11px;
     float: right;
+}
+
+#frame .content .messages .senttime i{
+    float: right;
+    font-size:10px;
 }
 
 

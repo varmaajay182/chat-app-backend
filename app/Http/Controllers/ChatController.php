@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Events\MessageHandelEvent;
+use App\Events\MessageSeenEvent;
 use App\Models\ChatMessage;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class ChatController extends Controller
 {
@@ -15,6 +16,9 @@ class ChatController extends Controller
     {
         $users = User::whereNotIn('id', [Auth()->user()->id])->get();
         $loginUser = User::where('id', [Auth()->user()->id])->first();
+        // $unseenMessage = ChatMessage::where('sender_id',  $loginUser->id)->whereNull('seen_at')->get();
+        // event(new MessageSeenEvent($unseenMessage));
+        // dd($unseenMessage);
         return view('chat-app-view.pages.index', ['users' => $users, 'loginUser' => $loginUser]);
     }
 
@@ -22,22 +26,22 @@ class ChatController extends Controller
     {
         try {
             $time = Carbon::now();
-            $currentTimeDate = Carbon::parse($time )
-            ->setTimezone('Asia/Kolkata')
-            ->toDateTimeString();
-              
+            $currentTimeDate = Carbon::parse($time)
+                ->setTimezone('Asia/Kolkata')
+                ->toDateTimeString();
+
             $array = explode(" ", $currentTimeDate);
 
             $currentDate = $array[0];
             $currentTime = $array[1];
-        
+
             // Log::info('Chat Data:', ['data' => $currentTimeDate]);
             $chat = ChatMessage::create([
                 'sender_id' => $request->sender_id,
                 'receiver_id' => $request->receiver_id,
                 'message' => $request->message,
-                'message_date'=>$currentDate,
-                'message_time'=>$currentTime
+                'message_date' => $currentDate,
+                'message_time' => $currentTime,
             ]);
 
             $user = User::find($chat->sender_id);
@@ -50,9 +54,17 @@ class ChatController extends Controller
                     ->orWhere('receiver_id', '=', $request->receiver_id);
             })->get();
 
-            event(new MessageHandelEvent($chat, $user));
+             event(new MessageHandelEvent($chat, $user));
+             
+            $unseenMessage = ChatMessage::where('sender_id', $request->sender_id)
+                ->where('receiver_id', $request->receiver_id)
+                ->whereNull('seen_at')
+                ->get();
 
-            return response()->json(['success' => true,'oldData'=>$oldData, 'data' => $chat, 'user' => $user]);
+
+            event(new MessageSeenEvent($unseenMessage));
+
+            return response()->json(['success' => true, 'oldData' => $oldData, 'data' => $chat, 'user' => $user]);
         } catch (\Exception $e) {
             Log::error('Error in Check Login:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While Check Data', 'message' => $e->getMessage()], 500);
@@ -70,14 +82,67 @@ class ChatController extends Controller
                 $query->where('receiver_id', '=', $request->sender_id)
                     ->orWhere('receiver_id', '=', $request->receiver_id);
             })->get();
-            
-            $senderImage = User::where('id',$request->sender_id)->first();
+
+            $senderImage = User::where('id', $request->sender_id)->first();
             $receiverImage = User::where('id', $request->receiver_id)->first();
 
-            return response()->json(['success' => true, 'data' => $data, 'senderImage'=>$senderImage, 'receiverImage'=>$receiverImage]);
+            return response()->json(['success' => true, 'data' => $data, 'senderImage' => $senderImage, 'receiverImage' => $receiverImage]);
         } catch (\Exception $e) {
             Log::error('Error in Check Login:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While get old chat', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateUnseen(Request $request)
+    {
+        try {
+            // Log::info('Chat Data:', ['data' => $request->message]);
+
+            $messages = json_decode($request->message, true);
+
+            if ($messages !== null) {
+
+                // Check if $request->message is an array
+                if (is_array($messages)) {
+                    if ($request->key == 'click') {
+                        foreach ($messages as $key => $message) {
+                            if (isset($message['id'])) {
+                                $this->updateMessageSeen($message);
+                            }
+                        }
+                    } else {
+                        $messagesAtIndex0 = array($messages);
+                        foreach ($messagesAtIndex0 as $key => $message) {
+
+                            if (isset($message['id'])) {
+                                $this->updateMessageSeen($message);
+                            }
+                        }
+                    }
+
+                } else {
+                    $this->updateMessageSeen($messages);
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'successfully update']);
+
+        } catch (\Exception $e) {
+            Log::error('Error in Check Login:', ['exception' => $e]);
+            return response()->json(['error' => 'Error Occurred While get old chat', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function updateMessageSeen($message)
+    {
+
+        $unseenMessage = ChatMessage::where('id', $message['id'])
+            ->whereNull('seen_at')
+            ->first();
+
+        if ($unseenMessage) {
+            $unseenMessage->seen_at = now();
+            $unseenMessage->save();
         }
     }
 }

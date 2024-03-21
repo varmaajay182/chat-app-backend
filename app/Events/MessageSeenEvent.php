@@ -10,17 +10,19 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class UserStatusEvent implements ShouldBroadcast
+
+class MessageSeenEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-   
-    public function __construct()
+
+    public $message;
+    public function __construct($message)
     {
-        
+        $this->message = $message;
     }
 
     /**
@@ -31,7 +33,7 @@ class UserStatusEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PresenceChannel('status-check'),
+            new PrivateChannel('message-seen'),
         ];
     }
 }

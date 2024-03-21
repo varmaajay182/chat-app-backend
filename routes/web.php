@@ -34,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('chatApp',[ChatController::class,'chatView']);
     Route::post('/save-chat',[ChatController::class,'saveChat']);
     Route::post('/load-chat',[ChatController::class,'loadOldChat']);
+    Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
+
 });
 
 Route::get('test',[TestWebsocket::class,'test']);

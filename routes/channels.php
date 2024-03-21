@@ -27,3 +27,7 @@ Broadcast::channel('message-handel', function($user){
     // Log::info('Chat Data:', ['data' => $user]);
     return $user;
 });
+
+Broadcast::channel('message-seen', function($user){
+    return $user;
+});
