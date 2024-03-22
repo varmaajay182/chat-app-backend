@@ -22,7 +22,7 @@ function isTodayMessageAvailable(data) {
 
 
 $(document).ready(function () {
-    localStorage.removeItem('unseenMessages');
+    // localStorage.removeItem('unseenMessages');
 
     oldDataGlobal = [];
     updateUnseenMessageUI();
@@ -60,19 +60,8 @@ $(document).ready(function () {
 
         $(".contact-profile").append(clickProfile);
 
-        // statusCheck(imgTag,receivId,nameTag)
         var getId = $(this).attr("data-id");
         receiver_id = getId;
-
-        // var unseenMessages = JSON.parse(localStorage.getItem('unseenMessages'));
-        // if (unseenMessages) {
-        //     if (unseenMessages.sender_id == receiver_id) {
-        //         console.log('helo')
-        //         console.log(unseenMessages)
-        //           
-        //     }
-        // }
-
 
         oldChatLoad(receiver_id);
     });
@@ -96,7 +85,7 @@ $(document).ready(function () {
                 if (response.success) {
                     scrollToBottom()
                     oldDataGlobal = response.oldData;
-                    // console.log(oldDataGlobal,"sysdfs")
+            
                     var message = response.data.message;
                     var image = response.user.image;
 
@@ -107,9 +96,9 @@ $(document).ready(function () {
                     var messagesBox = $(".messages");
                     var isDateAvailable =
                         isTodayMessageAvailable(oldDataGlobal);
-                    // console.log(isDateAvailable)
+                  
                     if (!isDateAvailable) {
-                        console.log('if')
+                      
                         var extraDiv = `
                                 <div class="dateShow">
                                     <div class="dateShowInnerDiv">
@@ -119,14 +108,15 @@ $(document).ready(function () {
                             `;
                         messagesBox.append(extraDiv);
                     }
-
+                    // 
+                    // 
                     var sentBox = `
                         <li class="sent">
                             <img src="/chat-app/${image}" alt="" />
                             <p>${message}</p>  
                         </li>
                         <div class="senttime">
-                           <i class="fa-solid fa-check"></i>
+                        <i class="fa-solid fa-check"></i>
                             <p>${formattedTime}</p>
                         </div>
                     `;
@@ -275,8 +265,15 @@ $(document).ready(function () {
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
-            success: function (response) {
-                // console.log(response)
+            success: function (data) {
+                  
+                localStorage.removeItem('unseenMessages');
+               
+                var unseenNumberElement = $('.unseenNumber')
+
+                unseenNumberElement.css({
+                    'display': 'none',
+                });
             },
             error: function (response) {
                 console.log(response);
@@ -303,9 +300,6 @@ $(document).ready(function () {
             var getTimeArray = currentTime.split(":");
             var formattedTime = getTimeArray.slice(0, 2).join(":");
 
-            // var unseenNumber = $('.contact[data-id="' + receiver_id + '"]');
-            // console.log(unseenNumber,'heelo')
-
             // console.log(sender_id, 'auth-sender')
             // console.log(receiver_id, 'receiver')
             // console.log(data.chatData.receiver_id, 'database receiver_id')
@@ -322,15 +316,20 @@ $(document).ready(function () {
                 updateUnseenMessage(data.chatData, key)
 
                 var messagesBox = $(".messages");
-
-            //     var extraDiv = `
-            //     <div class="dateShow">
-            //         <div class="dateShowInnerDiv">
-            //             <p>Today</p>
-            //         </div>
-            //     </div>
-            // `;
-            //     messagesBox.append(extraDiv);
+                // var isDateAvailable =
+                //     isTodayMessageAvailable(oldDataGlobal);
+              
+                // if (!isDateAvailable) {
+                  
+                //     var extraDiv = `
+                //             <div class="dateShow">
+                //                 <div class="dateShowInnerDiv">
+                //                     <p>Today</p>
+                //                 </div>
+                //             </div>
+                //         `;
+                //     messagesBox.append(extraDiv);
+                // }
 
                 var receive =
                     `
@@ -381,13 +380,42 @@ $(document).ready(function () {
         });
 
     Echo.private('message-seen').listen(".App\\Events\\MessageSeenEvent", (data) => {
-        console.log(data)
-        // var unseenMessageLength = data.message.length;
+        // console.log(data,'data')
+        // console.log(data.message.length)
 
-        updateUnseenMessageCount(data);
+        if(data.message.length !== 0){
+            if (
+                sender_id == data.message[0].receiver_id &&
+                receiver_id == data.message[0].sender_id
+            ){
 
-        updateUnseenMessageUI(data);
+               
+            }
+            else{
+                // console.log('else')
+                updateUnseenMessageCount(data);
+    
+                updateUnseenMessageUI(data);
+            }
+        }else{
+            console.log(sender_id)
+            console.log(receiver_id)
+            var sentTickIcon = $('.senttime i.fa-check');
+            // console.log(sentTickIcon)
 
+        
+            var svgElement = $('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>');
+            
+           
+            sentTickIcon.replaceWith(svgElement);
+        }
+        //   console.log(sender_id, 'auth-sender')
+        //     console.log(receiver_id, 'receiver')
+        //     console.log(data.message[0].receiver_id, 'database receiver_id')
+        //     console.log(data.message[0].sender_id, 'database sender_id')
+
+      
+      
 
     });
 });

@@ -653,6 +653,10 @@ body {
     font-size:10px;
 }
 
+#frame .content .messages .senttime svg{
+    float: right;
+    margin-top: -5px;
+}
 
 #frame .content .messages  li img {
     width: 30px;

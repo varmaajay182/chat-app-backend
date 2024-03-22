@@ -4,14 +4,7 @@
             <img id="profile-img" src="{{ asset('chat-app/' . $loginUser->image) }}" class="online" alt="" />
             <p>{{ $loginUser->name }}</p>
 
-            <div id="expanded">
-                <label for="twitter"><i class="fa fa-facebook fa-fw" aria-hidden="true"></i></label>
-                <input name="twitter" type="text" value="mikeross" />
-                <label for="twitter"><i class="fa fa-twitter fa-fw" aria-hidden="true"></i></label>
-                <input name="twitter" type="text" value="ross81" />
-                <label for="twitter"><i class="fa fa-instagram fa-fw" aria-hidden="true"></i></label>
-                <input name="twitter" type="text" value="mike.ross" />
-            </div>
+           
         </div>
     </div>
     {{-- {{isset($unseenMessage)}}

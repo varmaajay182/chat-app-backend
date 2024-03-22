@@ -54,13 +54,12 @@ class ChatController extends Controller
                     ->orWhere('receiver_id', '=', $request->receiver_id);
             })->get();
 
-             event(new MessageHandelEvent($chat, $user));
-             
+            event(new MessageHandelEvent($chat, $user));
+
             $unseenMessage = ChatMessage::where('sender_id', $request->sender_id)
                 ->where('receiver_id', $request->receiver_id)
                 ->whereNull('seen_at')
                 ->get();
-
 
             event(new MessageSeenEvent($unseenMessage));
 
@@ -82,6 +81,8 @@ class ChatController extends Controller
                 $query->where('receiver_id', '=', $request->sender_id)
                     ->orWhere('receiver_id', '=', $request->receiver_id);
             })->get();
+
+            // event(new MessageSeenEvent($data));
 
             $senderImage = User::where('id', $request->sender_id)->first();
             $receiverImage = User::where('id', $request->receiver_id)->first();
@@ -107,7 +108,7 @@ class ChatController extends Controller
                     if ($request->key == 'click') {
                         foreach ($messages as $key => $message) {
                             if (isset($message['id'])) {
-                                $this->updateMessageSeen($message);
+                                $seenMessage = $this->updateMessageSeen($message);
                             }
                         }
                     } else {
@@ -115,7 +116,7 @@ class ChatController extends Controller
                         foreach ($messagesAtIndex0 as $key => $message) {
 
                             if (isset($message['id'])) {
-                                $this->updateMessageSeen($message);
+                                $seenMessage = $this->updateMessageSeen($message);
                             }
                         }
                     }
@@ -125,7 +126,7 @@ class ChatController extends Controller
                 }
             }
 
-            return response()->json(['success' => true, 'message' => 'successfully update']);
+            return response()->json(['success' => true, 'message' => 'successfully update', 'seenMessage' => $seenMessage]);
 
         } catch (\Exception $e) {
             Log::error('Error in Check Login:', ['exception' => $e]);
@@ -144,5 +145,15 @@ class ChatController extends Controller
             $unseenMessage->seen_at = now();
             $unseenMessage->save();
         }
+
+        $unseenMessage = ChatMessage::where('sender_id', $message['sender_id'])
+        ->where('receiver_id', $message['receiver_id'])
+        ->whereNull('seen_at')
+        ->get();
+
+        event(new MessageSeenEvent($unseenMessage));
+
+        return $unseenMessage;
+
     }
 }
