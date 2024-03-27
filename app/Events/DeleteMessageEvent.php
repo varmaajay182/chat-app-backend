@@ -4,28 +4,25 @@ namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
-class MessageHandelEvent implements ShouldBroadcast
+class DeleteMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public $chatData;
-    public $sender;
+    public $messageId;
     public $oldData;
-    public function __construct($chatData,$sender,$oldData)
+
+    public function __construct($messageId,$oldData)
     {
-       
-        //  Log::info('Chat Data:', ['data' => $chatData]);
-        $this->chatData = $chatData;
-        $this->sender = $sender;
+        $this->messageId =$messageId;
         $this->oldData = $oldData;
     }
 
@@ -34,11 +31,10 @@ class MessageHandelEvent implements ShouldBroadcast
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
-
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('message-handel'),
+            new PrivateChannel('delete-message'),
         ];
     }
 }

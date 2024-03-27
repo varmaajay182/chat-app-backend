@@ -13,6 +13,10 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+p {
+    margin-bottom: 0% !important;
+}
+
 .uperDiv {
     height: 25%;
     background-color: #4a7fb3;
@@ -421,7 +425,7 @@ body {
     opacity: .5;
 }
 
-.unseenNumber{
+.unseenNumber {
     width: 25px;
     height: 25px;
     border-radius: 50%;
@@ -522,7 +526,7 @@ body {
 }
 
 #frame .content .contact-profile img {
-    width:48px;
+    width: 48px;
     height: 48px;
     border-radius: 50%;
     float: left;
@@ -558,8 +562,37 @@ body {
     overflow-x: hidden;
     overflow-y: auto;
     margin-top: 60px;
+    /* display: block; */
 
 }
+
+#frame .content .image-preview{
+    height: 82%;
+    margin-top: 60px;
+    display: none ;
+}
+
+#frame .content .image-preview .image-preview-outer{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#frame .content .image-preview .image-preview-outer .image-preview-inner{
+    height: 80%;
+    width: 50%;
+    /* border: 2px solid black; */
+}
+
+#frame .content .image-preview-inner img{
+    height: 100%;
+    width: 100%;
+    object-fit: contain;
+    
+}
+
 
 
 
@@ -572,7 +605,7 @@ body {
     background-color: rgba(0, 0, 0, 0.3);
 }
 
-#frame .content .messages  li {
+#frame .content .messages li {
     display: inline-block;
     clear: both;
     /* float: left; */
@@ -581,7 +614,7 @@ body {
     font-size: 0.9em;
 }
 
-.dateShow{
+.dateShow {
     width: 100%;
     height: 36px;
     display: flex;
@@ -591,8 +624,8 @@ body {
 
 }
 
-.dateShow .dateShowInnerDiv{
-    width:fit-content;
+.dateShow .dateShowInnerDiv {
+    width: fit-content;
     padding: 20px;
     height: 100%;
     background-color: #f3f3f3;
@@ -602,40 +635,77 @@ body {
     border-radius: 50px;
 }
 
-.dateShow p{
+.dateShow p {
     font-size: 15px;
 }
 
-#frame .content .messages  li:nth-last-child(1) {
+#frame .content .messages li:nth-last-child(1) {
     margin-bottom: 20px;
 }
 
-#frame .content .messages  li.replies img {
+#frame .content .messages li.replies img {
     margin: 6px 8px 0 0;
 }
 
-#frame .content .messages  li.replies p {
+#frame .content .messages li.replies p {
     background: #435f7a;
     color: #f5f5f5;
 }
 
+#frame .content .messages li.replies p img{
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    object-fit: contain;
+    margin: 0px;
+}
+
 #frame .content .messages .replytime {
-   margin-left: 55px;
+    margin-left: 55px;
 }
 
 #frame .content .messages .replytime p {
     font-size: 11px;
 }
 
-#frame .content .messages  li.sent img {
+#frame .content .messages li.sent img {
     float: right;
     margin: 6px 0 0 8px;
     object-fit: cover;
 }
 
-#frame .content .messages  li.sent p {
+#frame .content .messages li.sent .action {
+    float: right;
+    margin-top: 13px;
+    margin-right: 10px;
+    display: none;
+    cursor: pointer;
+}
+
+#messageEditIcon {
+    float: right;
+    margin-left: 10px;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+#frame .content .messages li.sent:hover i {
+    display: block;
+}
+
+#frame .content .messages li.sent p {
     background: #f5f5f5;
     float: right;
+    display: flex;
+    align-items: center;
+}
+
+#frame .content .messages li.sent p img{
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    object-fit: contain;
+    margin: 0px;
 }
 
 #frame .content .messages .senttime {
@@ -648,26 +718,26 @@ body {
     float: right;
 }
 
-#frame .content .messages .senttime i{
+#frame .content .messages .senttime i {
     float: right;
-    font-size:10px;
+    font-size: 10px;
 }
 
-#frame .content .messages .senttime svg{
+#frame .content .messages .senttime svg {
     float: right;
     margin-top: -5px;
 }
 
-#frame .content .messages  li img {
+#frame .content .messages li img {
     width: 30px;
     height: 30px;
     border-radius: 50%;
     float: left;
 }
 
-#frame .content .messages  li p {
+#frame .content .messages li p {
     display: inline-block;
-    padding: 10px 15px;
+    padding: 10px 10px;
     border-radius: 20px;
     max-width: 205px;
     line-height: 130%;
@@ -687,7 +757,51 @@ body {
     align-items: center;
 }
 
+/* 
+.rotate {
+    background-color: #d7d7d7;
+    border-radius: 50%;
+    animation: rotateSquare 0.1s linear forwards;
+  }
+
+  @keyframes rotateSquare {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(90deg);
+    }
+  } */
+
+/* .dropdown-menu {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    animation: slideFromBottom 0.5s ease forwards;
+  }
+
+  @keyframes slideFromBottom {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  } */
+
+.dropdown-icon {
+    font-size: 18px !important; 
+}
+
 #getMessage {
+    width: 90%;
+    height: 85%;
+}
+
+#editForm {
     width: 90%;
     height: 85%;
 }
@@ -705,15 +819,18 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    cursor: pointer;
 }
 
 .plus-icon i {
     font-size: 30px;
 }
-.iButton i{
+
+.iButton i {
     font-size: 30px;
 }
-.iButton{
+
+.iButton {
     border: none;
 }
 

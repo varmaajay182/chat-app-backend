@@ -1,29 +1,10 @@
-
-
 var oldDataGlobal;
 var unseenmessages;
 
-function isTodayMessageAvailable(data) {
-
-    var today = new Date();
-    var dd = String(today.getDate()).padStart(2, "0");
-    var mm = String(today.getMonth() + 1).padStart(2, "0");
-    var yyyy = today.getFullYear();
-    var todayDateString = yyyy + "-" + mm + "-" + dd;
-
-    var todayCount = 0;
-    for (var i = 0; i < data.length; i++) {
-        if (data[i].message_date === todayDateString) {
-            todayCount++;
-        }
-    }
-    return todayCount <= 1 ? false : true;
-}
 
 
 $(document).ready(function () {
     // localStorage.removeItem('unseenMessages');
-
     oldDataGlobal = [];
     updateUnseenMessageUI();
 
@@ -66,61 +47,129 @@ $(document).ready(function () {
         oldChatLoad(receiver_id);
     });
 
-    $("#getMessage").submit(function (e) {
+    $('#dropdown-document').click(function () {
+        $('#document-file').click();
+    });
+
+    $('#dropdown-image').click(function () {
+        $('#image-file').click();
+    });
+
+    $('#image-file').change(function () {
+        var fileName = $(this).prop('files')[0].name;
+        var inputFiled = $('#chatWrite').val(fileName)
+
+        $('.messages').css('display', 'none');
+        $('.image-preview').css('display', 'block')
+
+        var input = this;
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                $('.image-preview-inner').html('<img src="' + e.target.result + '" alt="Image Preview">');
+            };
+
+            reader.readAsDataURL(input.files[0]);
+        }
+
+    });
+
+    $("#getMessage").off('submit').on('submit', function (e) {
         e.preventDefault();
-        var getMessage = $(".form-control").val();
-        $(".form-control").val("");
+
+        var formData = new FormData(this);
+
+        var editMessageId = $("#editMessageId").val()
+
+        $('.form-control').val('')
+
+        formData.append('sender_id', sender_id);
+        formData.append('receiver_id', receiver_id);
+        formData.append('editMessageId', editMessageId);
+
+        if (editMessageId) {
+            EditMessageFunction(formData)
+        } else {
+            AddMessage(formData)
+        }
+
+    });
+
+    function AddMessage(formData) {
+
         $.ajax({
             url: "/save-chat",
             type: "post",
-            data: {
-                sender_id: sender_id,
-                receiver_id: receiver_id,
-                message: getMessage,
-            },
+            data: formData,
+            processData: false,
+            contentType: false,
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (response) {
                 if (response.success) {
+                    //    console.log(response.data)
+
+                    var getMessages = response.data
+                    $('.messages').css('display', 'block');
+                    $('.image-preview').css('display', 'none')
+
                     scrollToBottom()
                     oldDataGlobal = response.oldData;
-            
-                    var message = response.data.message;
-                    var image = response.user.image;
+                    // console.log(response.oldData)
 
-                    var currentTime = response.data.message_time;
-                    var getTimeArray = currentTime.split(":");
-                    var formattedTime = getTimeArray.slice(0, 2).join(":");
+                    getMessages.forEach((getMessage) => {
+                        var message;
+                        var pTagStyle = ""; // Initialize pTagStyle here
 
-                    var messagesBox = $(".messages");
-                    var isDateAvailable =
-                        isTodayMessageAvailable(oldDataGlobal);
-                  
-                    if (!isDateAvailable) {
-                      
-                        var extraDiv = `
-                                <div class="dateShow">
-                                    <div class="dateShowInnerDiv">
-                                        <p>Today</p>
+                        if (getMessage.image != null) {
+                            message = '<img src="' + getMessage.image + '" alt="No Image">';
+                            pTagStyle = "background:none;";
+                        } else {
+                            message = getMessage.message;
+                        }
+
+
+                        var image = response.user.image;
+
+                        var currentTime = getMessage.message_time;
+                        var getTimeArray = currentTime.split(":");
+                        var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+                        var messagesBox = $(".messages");
+
+                        if (response.oldData.length <= 1) {
+
+                            var extraDiv = `
+                                    <div class="dateShow" id="days_${response.data.id}">
+                                        <div class="dateShowInnerDiv">
+                                            <p>Today</p>
+                                        </div>
                                     </div>
-                                </div>
-                            `;
-                        messagesBox.append(extraDiv);
-                    }
-                    // 
-                    // 
-                    var sentBox = `
-                        <li class="sent">
-                            <img src="/chat-app/${image}" alt="" />
-                            <p>${message}</p>  
-                        </li>
-                        <div class="senttime">
-                        <i class="fa-solid fa-check"></i>
-                            <p>${formattedTime}</p>
-                        </div>
-                    `;
-                    messagesBox.append(sentBox);
+                                `;
+                            messagesBox.append(extraDiv);
+                        }
+
+                        var sentBox = `
+                            <li class="sent" id="message_${getMessage.id}">
+                                <img src="/chat-app/${image}" alt="" />
+                                <p style="${pTagStyle}">${message}</p>  
+                                <i class="fa fa-trash action" aria-hidden="true" id="delete_${getMessage.id}"></i>
+                                <i class="fas fa-edit action" id="messageEdit_${getMessage.id}"></i>
+                            </li>
+                            <div class="senttime" id="sentTime_${getMessage.id}">
+                            <i class="fa-solid fa-check"></i>
+                                <p>${formattedTime}</p>
+                            </div>
+                        `;
+                        messagesBox.append(sentBox);
+
+                        $("#getMessage")[0].reset();
+                    })
+
+
+
                 }
             },
 
@@ -128,7 +177,7 @@ $(document).ready(function () {
                 console.log(response);
             },
         });
-    });
+    }
 
     function scrollToBottom() {
         $('.messages').animate({
@@ -158,7 +207,7 @@ $(document).ready(function () {
 
                 if (response.success) {
 
-                    var message = response.data;
+                    var messages = response.data;
                     var senderImage = response.senderImage.image;
                     var receiverImage = response.receiverImage.image;
                     var className;
@@ -166,6 +215,8 @@ $(document).ready(function () {
                     var timeClass;
                     var currentDay;
                     var iconClass;
+                    var deleteIcon;
+                    var editIcon;
 
                     var key = 'click'
 
@@ -174,15 +225,40 @@ $(document).ready(function () {
                     }
                     var currentDayCheck = "";
 
-                    if (message.length !== 0) {
-                        updateUnseenMessage(message, key)
+                    if (response.unseenMessage.length != 0) {
+                        if (sender_id != response.unseenMessage[0].sender_id) {
+                            updateUnseenMessage(response.unseenMessage, key)
+                        }
                     }
 
+                    messages.forEach((el) => {
 
-                    message.forEach((el) => {
-                        var currentTime = el.message_time;
-                        var getTimeArray = currentTime.split(":");
-                        var formattedTime = getTimeArray.slice(0, 2).join(":");
+                        if (el.updated_at != null) {
+                            var currentTime = el.updated_at;
+                            var getTimeArray = currentTime.split(":");
+                            var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+                            var editedIcon = '<i class="fas fa-pencil-alt" id="messageEditIcon"></i>'
+
+                        } else {
+                            var currentTime = el.message_time;
+                            var getTimeArray = currentTime.split(":");
+                            var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+                            var editedIcon = "";
+                        }
+
+                        var message;
+                        var pTagStyle = "";
+                        // console.log(el)
+
+                        if (el.Image != null) {
+                            message = '<img src="' + el.Image + '" alt="No Image">'
+                            pTagStyle = "background:none;";
+                        } else {
+                            message = el.message;
+                        }
+
 
                         var currentDate = el.message_date;
                         var messageDate = new Date(currentDate);
@@ -209,7 +285,7 @@ $(document).ready(function () {
                             }
                             if (currentDay !== currentDayCheck) {
                                 var extraDiv = `
-                                <div class="dateShow">
+                                <div class="dateShow" id="days_${el.id}">
                                     <div class="dateShowInnerDiv">
                                         <p>${currentDay}</p>
                                     </div>
@@ -225,26 +301,42 @@ $(document).ready(function () {
                             className = "sent";
                             Image = senderImage;
                             timeClass = "senttime";
-                            iconClass = "fa-solid fa-check"
+                            deleteIcon = '<i class="fa fa-trash action" aria-hidden="true" id="delete_' + el.id + '"></i> '
+                            if (el.Image != null) {
+                                editIcon = "";
+                            } else {
+                                editIcon = '<i class="fas fa-edit action" id="messageEdit_' + el.id + '"></i>'
+                            }
+                            if (el.seen_at != null) {
+                                iconClass = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>'
+                            } else {
+                                iconClass = "<i class='fa-solid fa-check'></i>"
+                            }
                         } else {
                             className = "replies";
                             Image = receiverImage;
                             timeClass = "replytime";
                             iconClass = "";
+                            deleteIcon = "";
+                            editIcon = "";
                         }
 
                         var sentBox = `
-                            <li class="${className}">
+                            <li class="${className}" id="message_${el.id}">
                                 <img src="/chat-app/${Image}" alt="" />
-                                <p>${el.message}</p>
+                                <p style="${pTagStyle}">${message}
+                                ${editedIcon}
+                                </p>
+                                ${deleteIcon} ${editIcon}
                             </li>
-                            <div class="${timeClass}">
-                                <i class="${iconClass}"></i>
+                            <div class="${timeClass}" id="sentTime_${el.id}">
+                                ${iconClass}
                                 <p>${formattedTime}</p>
                             </div>
                         `;
                         messagesBox.append(sentBox);
                     });
+
                 }
             },
             error: function (response) {
@@ -253,8 +345,113 @@ $(document).ready(function () {
         });
     }
 
+    $(document).on('click', '.messages li.sent i.fa-trash', function () {
+        // Store the reference to the delete icon
+        var deleteIcon = $(this).attr('id');
+
+        const deleteArray = deleteIcon.split('_');
+        const messageId = deleteArray[1];
+        // console.log(messageId);
+
+        // Show SweetAlert confirmation dialog
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!"
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteMessage(messageId);
+            }
+        });
+    });
+
+    $(document).on('click', '.messages li.sent i.fa-edit', function () {
+
+        var editIcon = $(this).attr('id');
+
+        const editArray = editIcon.split('_');
+        const messageId = editArray[1];
+
+        var editMesssageId = 'messageEdit_' + messageId;
+        var editElement = $('#' + editMesssageId);
+        var message = editElement.parent().find('p').text();
+
+        var input = $('#chatWrite')
+        input.val(message);
+        var editInput = $('#editMessageId')
+        editInput.val(messageId)
+
+    });
+
+    function EditMessageFunction(formData) {
+
+        $.ajax({
+            url: "/update-message",
+            type: "post",
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (data) {
+
+                // console.log(data.updateMessage.message)
+
+                var lielementId = 'message_' + data.updateMessage.id
+                var lielement = $('#' + lielementId).find('p').text(data.updateMessage.message)
+
+                lielement.append('<i class="fas fa-pencil-alt" id="messageEditIcon"></i>')
+
+                // console.log(data.updateMessage.updated_at)
+
+                var currentTime = data.updateMessage.updated_at;
+                var getTimeArray = currentTime.split(":");
+                var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+                var sentClass = $('#sentTime_' + data.updateMessage.id).find('p').text(formattedTime)
+
+                // sentClass.text();
+                $('.form-control').val('')
+                $("#editMessageId").val("")
+
+            },
+            error: function (response) {
+                console.log(response);
+            },
+        })
+    }
+
+    function deleteMessage(messageId) {
+        $.ajax({
+            url: "/delete-message",
+            type: "post",
+            data: {
+                id: messageId
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (data) {
+
+                var deletemessageId = 'delete_' + data.deletedMessage.id;
+                var deleteIconElement = $('#' + deletemessageId);
+                var nextSibling = deleteIconElement.parent().next();
+                nextSibling.remove();
+                deleteIconElement.parent().remove();
+            },
+            error: function (response) {
+                console.log(response);
+            },
+        })
+    }
+
     function updateUnseenMessage(message, key) {
-        // console.log(message)
+
         $.ajax({
             url: "/update-unseenmessage",
             type: "post",
@@ -266,14 +463,22 @@ $(document).ready(function () {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
             },
             success: function (data) {
-                  
-                localStorage.removeItem('unseenMessages');
-               
-                var unseenNumberElement = $('.unseenNumber')
 
-                unseenNumberElement.css({
-                    'display': 'none',
-                });
+                if (
+                    sender_id == data.seenMessage.receiver_id &&
+                    receiver_id == data.seenMessage.sender_id
+                ) {
+                    var userId = data.seenMessage.sender_id;
+                    // console.log(userId,'userID')
+                    var unseenNumber = $("#user_" + userId + " .unseenNumber");
+
+                    localStorage.removeItem('unseenMessages');
+
+                    unseenNumber.css({
+                        'display': 'none',
+                    });
+                }
+
             },
             error: function (response) {
                 console.log(response);
@@ -281,72 +486,72 @@ $(document).ready(function () {
         });
     }
 
-    function yeardatmonth(DateJquery) {
-        var year = DateJquery.getFullYear();
-        var month = (DateJquery.getMonth() + 1).toString().padStart(2, "0");
-        var day = DateJquery.getDate().toString().padStart(2, "0");
-        var formattedDate = year + "-" + month + "-" + day;
-        return formattedDate;
-    }
-
     Echo.private("message-handel").listen(
         ".App\\Events\\MessageHandelEvent",
         (data) => {
-
-            var message = data.chatData.message;
-            var user = data.sender.image;
-
-            var currentTime = data.chatData.message_time;
-            var getTimeArray = currentTime.split(":");
-            var formattedTime = getTimeArray.slice(0, 2).join(":");
-
-            // console.log(sender_id, 'auth-sender')
-            // console.log(receiver_id, 'receiver')
-            // console.log(data.chatData.receiver_id, 'database receiver_id')
-            // console.log(data.chatData.sender_id, 'database sender_id')
-
+            // console.log(data.chatData.Image)
+            // console.log(data.chatData.Image != null)
             if (
-                sender_id == data.chatData.receiver_id &&
-                receiver_id == data.chatData.sender_id
+                sender_id == data.chatData[0].receiver_id &&
+                receiver_id == data.chatData[0].sender_id
             ) {
-                scrollToBottom()
 
-                var key = "load"
+                var getSenderMessages = data.chatData
+                getSenderMessages.forEach((getMessage) => {
+                    console.log(getMessage)
 
-                updateUnseenMessage(data.chatData, key)
+                    if (getMessage.image != null) {
+                        var message = '<img src="' + getMessage.image + '" alt="No Image">'
+                        var pTagStyle = "background:none;";
+                    } else {
+                        var message = getMessage.message;
+                    }
 
-                var messagesBox = $(".messages");
-                // var isDateAvailable =
-                //     isTodayMessageAvailable(oldDataGlobal);
-              
-                // if (!isDateAvailable) {
+                    var user = data.sender.image;
+
+                    var currentTime = getMessage.message_time;
+                    var getTimeArray = currentTime.split(":");
+                    var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+
+                    scrollToBottom()
+
+                    var key = "load"
+
+                    updateUnseenMessage(getMessage, key)
+
+                    var messagesBox = $(".messages");
+
+                    if (data.oldData.length <= 1) {
+
+                        var extraDiv = `
+                                <div class="dateShow" id="days_${getMessage.id}">
+                                    <div class="dateShowInnerDiv">
+                                        <p>Today</p>
+                                    </div>
+                                </div>
+                            `;
+                        messagesBox.append(extraDiv);
+                    }
+
+                    var receive =
+                        `
+                    <li class="replies" id="message_${getMessage.id}">
+                        <img src="/chat-app/` +
+                        user +
+                        `" alt="" />
+                        <p style="${pTagStyle}">` +
+                        message +
+                        ` </p>
+                    </li>
+                    <div class="replytime">
                   
-                //     var extraDiv = `
-                //             <div class="dateShow">
-                //                 <div class="dateShowInnerDiv">
-                //                     <p>Today</p>
-                //                 </div>
-                //             </div>
-                //         `;
-                //     messagesBox.append(extraDiv);
-                // }
+                    <p>${formattedTime}</p>
+                </div>
+                    `;
+                    $(".messages").append(receive);
+                })
 
-                var receive =
-                    `
-                <li class="replies">
-                    <img src="/chat-app/` +
-                    user +
-                    `" alt="" />
-                    <p>` +
-                    message +
-                    ` </p>
-                </li>
-                <div class="replytime">
-              
-                <p>${formattedTime}</p>
-            </div>
-                `;
-                $(".messages").append(receive);
             }
         }
     );
@@ -380,80 +585,150 @@ $(document).ready(function () {
         });
 
     Echo.private('message-seen').listen(".App\\Events\\MessageSeenEvent", (data) => {
-        // console.log(data,'data')
-        // console.log(data.message.length)
 
-        if(data.message.length !== 0){
+        if (data.message.length !== 0) {
             if (
                 sender_id == data.message[0].receiver_id &&
                 receiver_id == data.message[0].sender_id
-            ){
+            ) {
+                // console.log('hell')
 
-               
             }
-            else{
-                // console.log('else')
+            else {
+
                 updateUnseenMessageCount(data);
-    
+
                 updateUnseenMessageUI(data);
             }
-        }else{
-            console.log(sender_id)
-            console.log(receiver_id)
-            var sentTickIcon = $('.senttime i.fa-check');
-            // console.log(sentTickIcon)
-
-        
-            var svgElement = $('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>');
-            
-           
-            sentTickIcon.replaceWith(svgElement);
         }
-        //   console.log(sender_id, 'auth-sender')
-        //     console.log(receiver_id, 'receiver')
-        //     console.log(data.message[0].receiver_id, 'database receiver_id')
-        //     console.log(data.message[0].sender_id, 'database sender_id')
-
-      
-      
 
     });
+    function updateUnseenMessageCount(data) {
+
+        var unseenMessageLength = data.message.length;
+        var receiverIdFromDatabase = data.message[0].receiver_id;
+        var senderIdFormDatabase = data.message[0].sender_id
+
+        if (sender_id == receiverIdFromDatabase) {
+            var unseenMessages = {
+                sender_id: senderIdFormDatabase,
+                receiver_id: receiverIdFromDatabase,
+                count: unseenMessageLength
+            };
+            localStorage.setItem('unseenMessages', JSON.stringify(unseenMessages));
+        }
+    }
+
+    function updateUnseenMessageUI() {
+        var unseenMessages = JSON.parse(localStorage.getItem('unseenMessages'));
+        // console.log(unseenMessages, 'unseenMessages')
+
+        if (unseenMessages) {
+            var unseenNumber = $('.contact#user_' + unseenMessages.sender_id);
+
+            var unseenNumberElement = unseenNumber.find('.unseenNumber');
+
+            if (unseenMessages.count != 0) {
+
+                unseenNumberElement.css({
+                    'display': 'block',
+                    'display': 'flex',
+                    'justifyContent': 'center',
+                    'alignItems': 'center'
+                });
+
+                var ptext = unseenNumberElement.find('p').text(unseenMessages.count);
+            } else {
+                unseenNumberElement.css({
+                    'display': 'none',
+                })
+            }
+        }
+    }
+    Echo.private('icon-update').listen(".App\\Events\\SeenIconUpdateEvent", (data) => {
+
+        if (sender_id == data.database_senderId &&
+            receiver_id == data.database_receiverId) {
+
+            const sentTickIcon = $('.senttime i.fa-check');
+
+            const svgElement = $('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>');
+
+            sentTickIcon.replaceWith(svgElement);
+        }
+
+    });
+
+    Echo.private('delete-message').listen(".App\\Events\\DeleteMessageEvent", (data) => {
+
+        if (data.oldData.length <= 1) {
+
+            var currentDate = data.oldData[0].message_date;
+            var messageDate = new Date(currentDate);
+            var messageDateFormat = formatDate(messageDate);
+
+            var currentDateJquery = new Date();
+            var currentDateformat = formatDate(currentDateJquery);
+
+            var yesterday = new Date(currentDateJquery);
+            yesterday.setDate(currentDateJquery.getDate() - 1);
+            var yesterdayDateformat = formatDate(yesterday);
+
+            if (messageDateFormat == currentDateformat) {
+                currentDay = "Today";
+            } else if (
+                messageDateFormat == yesterdayDateformat
+            ) {
+                currentDay = "Yesterday";
+            } else {
+                currentDay = messageDateFormat;
+            }
+
+            var dateToShow = $('.dateShow').filter(function () {
+                return $(this).find('.dateShowInnerDiv p').text() === currentDay;
+            });
+
+            dateToShow.remove();
+        }
+
+        var deletemessageId = 'message_' + data.messageId.id;
+        var deleteIconElement = $('#' + deletemessageId);
+        var nextSibling = deleteIconElement.next();
+        nextSibling.remove();
+        deleteIconElement.remove();
+
+        if (!(sender_id == data.messageId.sender_id &&
+            receiver_id == data.messageId.receiver_id)) {
+            var storedUnseenMessages = JSON.parse(localStorage.getItem('unseenMessages'));
+
+            if (storedUnseenMessages !== null) {
+
+                if (data.messageId.sender_id == storedUnseenMessages.sender_id && data.messageId.receiver_id == storedUnseenMessages.receiver_id) {
+                    // console.log('minus')
+                    storedUnseenMessages.count--;
+
+                    localStorage.setItem('unseenMessages', JSON.stringify(storedUnseenMessages));
+
+                    updateUnseenMessageUI();
+                }
+            }
+        }
+
+    });
+
+    Echo.private('edit-message-handle').listen(".App\\Events\\EditMessageEvent", (data) => {
+        // console.log(data)
+        var lielementId = 'message_' + data.message.id
+        var lielement = $('#' + lielementId).find('p').text(data.message.message)
+
+        lielement.append('<i class="fas fa-pencil-alt" id="messageEditIcon"></i>')
+
+        var currentTime = data.message.updated_at;
+        var getTimeArray = currentTime.split(":");
+        var formattedTime = getTimeArray.slice(0, 2).join(":");
+
+        var sentClass = $('#sentTime_' + data.message.id).find('p').text(formattedTime)
+
+    });
+
 });
-
-function updateUnseenMessageCount(data) {
-    // console.log(data);
-    var unseenMessageLength = data.message.length;
-    var receiverIdFromDatabase = data.message[0].receiver_id;
-    var senderIdFormDatabase = data.message[0].sender_id
-
-    if (sender_id == receiverIdFromDatabase) {
-        var unseenMessages = {
-            sender_id: senderIdFormDatabase,
-            count: unseenMessageLength
-        };
-        localStorage.setItem('unseenMessages', JSON.stringify(unseenMessages));
-    }
-}
-
-function updateUnseenMessageUI() {
-    var unseenMessages = JSON.parse(localStorage.getItem('unseenMessages'));
-    // console.log(unseenMessages)
-    if (unseenMessages && unseenMessages.count && unseenMessages.count !== "") {
-        var unseenNumber = $('.contact#user_' + unseenMessages.sender_id);
-
-        var unseenNumberElement = unseenNumber.find('.unseenNumber');
-
-        unseenNumberElement.css({
-            'display': 'block',
-            'display': 'flex',
-            'justifyContent': 'center',
-            'alignItems': 'center'
-        });
-        // console.log(unseenMessages.count);
-
-        var ptext = unseenNumberElement.find('p').text(unseenMessages.count);
-        //    console.log(ptext.text())
-    } else {
-        $('.unseenNumber').css('display', 'none');
-    }
-}

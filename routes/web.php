@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/save-chat',[ChatController::class,'saveChat']);
     Route::post('/load-chat',[ChatController::class,'loadOldChat']);
     Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
+    Route::post('/delete-message',[ChatController::class,'deleteMessage']);
+    Route::post('/update-message',[ChatController::class,'updateMessage']);
 
 });
 

@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class ChatMessage extends Model
 {
     use HasFactory;
+    public $timestamps = false;
     protected $fillable = [
         'sender_id',
         'receiver_id',
         'message',
+        'image',
         'message_time',
-        'message_date'
+        'message_date',
+        'updated_at'
     ];
 }

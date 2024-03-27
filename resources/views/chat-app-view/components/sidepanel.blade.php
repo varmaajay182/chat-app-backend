@@ -24,11 +24,12 @@
                             <div>
                                 <p class="name">{{ $user->name }}</p>
                                 <p class="preview" id="preview-{{ $user->id }}"></p>
+                                
                             </div>
                           
                             <div class="unseenNumber">
                                 
-                                <p>1</p>
+                                <p></p>
                             </div>
                      
                         </div>

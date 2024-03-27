@@ -31,3 +31,15 @@ Broadcast::channel('message-handel', function($user){
 Broadcast::channel('message-seen', function($user){
     return $user;
 });
+
+Broadcast::channel('icon-update', function($user){
+    return $user;
+});
+
+Broadcast::channel('delete-message', function($user){
+    return $user;
+});
+
+Broadcast::channel('edit-message-handle', function($user){
+    return $user;
+});
