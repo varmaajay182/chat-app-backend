@@ -19,10 +19,21 @@ class ChatController extends Controller
     public function chatView()
     {
         $users = User::whereNotIn('id', [Auth()->user()->id])->get();
+        // dd($users);
         $loginUser = User::where('id', [Auth()->user()->id])->first();
-        // $unseenMessage = ChatMessage::where('sender_id',  $loginUser->id)->whereNull('seen_at')->get();
-        // event(new MessageSeenEvent($unseenMessage));
-        // dd($unseenMessage);
+
+        foreach ($users as $user) {
+
+            $onlineUser = User::where('id', $user['id'])->first();
+            // Log::info('online check:', ['data' => $onlineUser]);
+        
+            if ($onlineUser) {
+                $onlineUser->update([
+                    'is_active' => 'no',
+                ]);
+            }
+        }
+
         return view('chat-app-view.pages.index', ['users' => $users, 'loginUser' => $loginUser]);
     }
 
@@ -41,7 +52,7 @@ class ChatController extends Controller
             // var_dump($request->sender_id);
 
             $images = [];
-            $chatArray= [];
+            $chatArray = [];
 
             if ($request->hasFile('image')) {
                 if ($request->file('image') instanceof UploadedFile) {
@@ -62,29 +73,43 @@ class ChatController extends Controller
                 $message = null;
             } else {
                 $message = $request->message;
-                $imageUrl= null;
+                $imageUrl = null;
+            }
+            
+            $user = User::where('id',$request->receiver_id)->first();
+
+            if($user){
+                $status = $user->is_active;
             }
 
-            if($images){
+            if($status == 'yes'){
+                $messageStatus = 1;
+            }else{
+                $messageStatus = 0;
+            }
+
+            if ($images) {
                 foreach ($images as $imageUrl) {
                     $chat = ChatMessage::create([
                         'sender_id' => $request->sender_id,
                         'receiver_id' => $request->receiver_id,
                         'message' => $message,
                         'image' => $imageUrl,
+                        'receiver_status' => $messageStatus,
                         'message_date' => $currentDate,
                         'message_time' => $currentTime,
                         'updated_at' => null,
                     ]);
-    
+
                     $chatArray[] = $chat;
                 }
-            }else{
+            } else {
                 $chat = ChatMessage::create([
                     'sender_id' => $request->sender_id,
                     'receiver_id' => $request->receiver_id,
                     'message' => $message,
                     'image' => $imageUrl,
+                    'receiver_status' => $messageStatus,
                     'message_date' => $currentDate,
                     'message_time' => $currentTime,
                     'updated_at' => null,
@@ -92,9 +117,6 @@ class ChatController extends Controller
 
                 $chatArray[] = $chat;
             }
-
-           
-              Log::info('Chat Data:', ['data' => $chatArray]);
 
             $user = User::find($chatArray[0]->sender_id);
             $todayDate = date("Y-m-d");
@@ -110,8 +132,7 @@ class ChatController extends Controller
 
             event(new MessageHandelEvent($chatArray, $user, $oldData));
 
-            $unseenMessage = ChatMessage::where('sender_id', $request->sender_id)
-                ->where('receiver_id', $request->receiver_id)
+            $unseenMessage = ChatMessage::where('receiver_id', $request->receiver_id)
                 ->whereNull('seen_at')
                 ->get();
 
@@ -228,7 +249,14 @@ class ChatController extends Controller
 
             $deleteMessage = ChatMessage::where('id', $request->id)->first();
 
-            $oldData = ChatMessage::where('message_date', $deleteMessage->message_date)->get();
+            $oldData = ChatMessage::where(function ($query) use ($request) {
+                $query->where('sender_id', '=', $request->senderId)
+                    ->orWhere('sender_id', '=', $request->receiverId);
+            })->where(function ($query) use ($request) {
+                $query->where('receiver_id', '=', $request->senderId)
+                    ->orWhere('receiver_id', '=', $request->receiverId);
+            })->where('message_date', $deleteMessage->message_date)
+                ->get();
 
             event(new DeleteMessageEvent($deleteMessage, $oldData));
 
@@ -269,6 +297,70 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in While updateing message:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While updateing message', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function offlineCheck(Request $request)
+    {
+        try {
+
+            $user = User::where('id', $request->id)->first();
+            // Log::info('offline check:', ['data' => $user]);
+
+            if ($user) {
+                $user->update([
+                    'is_active' => 'no',
+                ]);
+            }
+
+            return response()->json(['success' => true, 'message' => 'successfully working']);
+
+        } catch (\Exception $e) {
+            Log::error('Error in While offline checking:', ['exception' => $e]);
+            return response()->json(['error' => 'Error Occurred While offline checking', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function onlineCheck(Request $request)
+    {
+        try {
+
+            foreach ($request->user as $user) {
+
+                $onlineUser = User::where('id', $user['id'])->first();
+                // Log::info('online check:', ['data' => $onlineUser]);
+            
+                if ($onlineUser) {
+                    $onlineUser->update([
+                        'is_active' => 'yes',
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true, 'message' => 'successfully working']);
+
+        } catch (\Exception $e) {
+            Log::error('Error in While online checking:', ['exception' => $e]);
+            return response()->json(['error' => 'Error Occurred While online checking', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function iconChange(Request $request){
+        try{
+
+            $messages = ChatMessage::where('receiver_id',$request->id)->whereNull('seen_at')->get();
+
+            foreach($messages as $message){
+                $message->update([
+                    'receiver_status' => 1,
+                ]);
+            }
+            event(new MessageSeenEvent($messages));
+            return response()->json(['success' => true, 'messages' =>  $messages]);
+
+        }catch(\Exception $e){
+            Log::error('Error in While icon change:', ['exception' => $e]);
+            return response()->json(['error' => 'Error Occurred While icon change', 'message' => $e->getMessage()], 500);
         }
     }
 

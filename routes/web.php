@@ -37,6 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
     Route::post('/delete-message',[ChatController::class,'deleteMessage']);
     Route::post('/update-message',[ChatController::class,'updateMessage']);
+    Route::post('/offline-check',[ChatController::class,'offlineCheck']);
+    Route::post('/online-check',[ChatController::class,'onlineCheck']);
+    Route::post('/icon-change',[ChatController::class,'iconChange']);
 
 });
 

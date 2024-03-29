@@ -6,7 +6,10 @@ var unseenmessages;
 $(document).ready(function () {
     // localStorage.removeItem('unseenMessages');
     oldDataGlobal = [];
-    updateUnseenMessageUI();
+    // updateUnseenMessageUI();
+
+    // var storedState = localStorage.getItem('unseenNumberState');
+    // console.log(storedState)
 
     $(".contact").click(function () {
 
@@ -16,6 +19,14 @@ $(document).ready(function () {
         var content = $(".content").css({
             display: "block",
         });
+
+        var backIncon;
+
+        if ($(window).width() <= 600) {
+            backIncon = "<div class='backIcon'><i class='fa fa-arrow-left' aria-hidden='true'></i></div>"
+        } else {
+            backIncon = ""
+        }
 
         var imgTag = $(this).find("img").attr("src");
         var side_id = $(this).attr("id");
@@ -28,6 +39,7 @@ $(document).ready(function () {
 
         var clickProfile =
             `
+            ${backIncon}
             <img src="` +
             imgTag +
             `" alt="" />
@@ -80,8 +92,10 @@ $(document).ready(function () {
 
         var formData = new FormData(this);
 
+
         var editMessageId = $("#editMessageId").val()
 
+        var inputValue = $('.form-control').val()
         $('.form-control').val('')
 
         formData.append('sender_id', sender_id);
@@ -91,7 +105,9 @@ $(document).ready(function () {
         if (editMessageId) {
             EditMessageFunction(formData)
         } else {
-            AddMessage(formData)
+            if (inputValue !== "") {
+                AddMessage(formData)
+            }
         }
 
     });
@@ -121,13 +137,31 @@ $(document).ready(function () {
 
                     getMessages.forEach((getMessage) => {
                         var message;
-                        var pTagStyle = ""; // Initialize pTagStyle here
+                        var pTagStyle = "";
+                        var iconChek;
+                        var editIcon;
+
+                        var unseenNumber = $('.contact#user_' + getMessage.receiver_id);
+                        $('ul').prepend(unseenNumber);
+
+                        // localStorage.setItem('unseenNumberState', JSON.stringify( $('ul').prepend(unseenNumber)));
+
+
 
                         if (getMessage.image != null) {
                             message = '<img src="' + getMessage.image + '" alt="No Image">';
                             pTagStyle = "background:none;";
+                            editIcon = ""
                         } else {
+
                             message = getMessage.message;
+                            editIcon = "<i class='fas fa-edit action' id='messageEdit_" + getMessage.id + "'></i>";
+                        }
+
+                        if (getMessage.receiver_status == 1) {
+                            iconChek = '<i class="fa-solid fa-check-double"></i>'
+                        } else {
+                            iconChek = '<i class="fa-solid fa-check"></i>'
                         }
 
 
@@ -150,16 +184,16 @@ $(document).ready(function () {
                                 `;
                             messagesBox.append(extraDiv);
                         }
-
+                        // <img src="/chat-app/${image}" alt="" />
                         var sentBox = `
                             <li class="sent" id="message_${getMessage.id}">
-                                <img src="/chat-app/${image}" alt="" />
+                              
                                 <p style="${pTagStyle}">${message}</p>  
                                 <i class="fa fa-trash action" aria-hidden="true" id="delete_${getMessage.id}"></i>
-                                <i class="fas fa-edit action" id="messageEdit_${getMessage.id}"></i>
+                                ${editIcon}
                             </li>
                             <div class="senttime" id="sentTime_${getMessage.id}">
-                            <i class="fa-solid fa-check"></i>
+                              ${iconChek}
                                 <p>${formattedTime}</p>
                             </div>
                         `;
@@ -217,6 +251,7 @@ $(document).ready(function () {
                     var iconClass;
                     var deleteIcon;
                     var editIcon;
+                    var chatImage;
 
                     var key = 'click'
 
@@ -301,6 +336,7 @@ $(document).ready(function () {
                             className = "sent";
                             Image = senderImage;
                             timeClass = "senttime";
+                            chatImage = "";
                             deleteIcon = '<i class="fa fa-trash action" aria-hidden="true" id="delete_' + el.id + '"></i> '
                             if (el.Image != null) {
                                 editIcon = "";
@@ -310,7 +346,12 @@ $(document).ready(function () {
                             if (el.seen_at != null) {
                                 iconClass = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>'
                             } else {
-                                iconClass = "<i class='fa-solid fa-check'></i>"
+                                if (el.receiver_status == 1) {
+                                    iconClass = "<i class='fa-solid fa-check-double'></i>"
+                                } else {
+
+                                    iconClass = "<i class='fa-solid fa-check'></i>"
+                                }
                             }
                         } else {
                             className = "replies";
@@ -319,11 +360,12 @@ $(document).ready(function () {
                             iconClass = "";
                             deleteIcon = "";
                             editIcon = "";
+                            chatImage = "<img src='/chat-app/" + receiverImage + "' alt='' />";
                         }
 
                         var sentBox = `
                             <li class="${className}" id="message_${el.id}">
-                                <img src="/chat-app/${Image}" alt="" />
+                                ${chatImage}
                                 <p style="${pTagStyle}">${message}
                                 ${editedIcon}
                                 </p>
@@ -372,6 +414,7 @@ $(document).ready(function () {
     $(document).on('click', '.messages li.sent i.fa-edit', function () {
 
         var editIcon = $(this).attr('id');
+     
 
         const editArray = editIcon.split('_');
         const messageId = editArray[1];
@@ -431,7 +474,9 @@ $(document).ready(function () {
             url: "/delete-message",
             type: "post",
             data: {
-                id: messageId
+                id: messageId,
+                senderId: sender_id,
+                receiverId: receiver_id
             },
             headers: {
                 "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
@@ -486,11 +531,96 @@ $(document).ready(function () {
         });
     }
 
+    function offlineStatus(userId) {
+        $.ajax({
+            url: "/offline-check",
+            type: "post",
+            data: {
+                id: userId
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+
+                //   console.log(response)
+
+            },
+            error: function (response) {
+                console.log(response);
+            },
+        });
+    }
+
+    function onlineStatus(user) {
+        $.ajax({
+            url: "/online-check",
+            type: "post",
+            data: {
+                user: user
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+
+                //   console.log(response)
+
+            },
+            error: function (response) {
+                console.log(response);
+            },
+        });
+    }
+
+    function iconChange(userId) {
+        $.ajax({
+            url: "/icon-change",
+            type: "post",
+            data: {
+                id: userId
+            },
+            headers: {
+                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr("content"),
+            },
+            success: function (response) {
+
+                //   console.log(response)
+
+                var messages = response.messages
+
+                messages.forEach((message) => {
+                    var id = message.id
+
+                    var icon = $('#sentTime_' + id).find('i')
+
+                    var updateIcon = $("<i class='fa-solid fa-check-double'></i>")
+                    icon.replaceWith(updateIcon);
+
+                })
+
+
+            },
+            error: function (response) {
+                console.log(response);
+            },
+        });
+    }
+
     Echo.private("message-handel").listen(
         ".App\\Events\\MessageHandelEvent",
         (data) => {
+            // console.log(data)
             // console.log(data.chatData.Image)
             // console.log(data.chatData.Image != null)
+            if (sender_id == data.chatData[0].receiver_id) {
+
+                var unseenNumber = $('.contact#user_' + data.chatData[0].sender_id);
+                $('ul').prepend(unseenNumber);
+
+            }
+
+
             if (
                 sender_id == data.chatData[0].receiver_id &&
                 receiver_id == data.chatData[0].sender_id
@@ -498,7 +628,7 @@ $(document).ready(function () {
 
                 var getSenderMessages = data.chatData
                 getSenderMessages.forEach((getMessage) => {
-                    console.log(getMessage)
+                    // console.log(getMessage)
 
                     if (getMessage.image != null) {
                         var message = '<img src="' + getMessage.image + '" alt="No Image">'
@@ -561,6 +691,7 @@ $(document).ready(function () {
             // console.log(user)
             for (var i = 0; i < user.length; i++) {
                 if (sender_id != user[i]["id"]) {
+                    //    console.log(user[i])
                     $("#status-" + user[i].id)
                         .removeClass()
                         .addClass("contact-status status-online");
@@ -568,25 +699,38 @@ $(document).ready(function () {
                 }
             }
 
+            onlineStatus(user)
+
         })
         .joining((user) => {
+            // console.log(user)
             $("#status-" + user.id)
                 .removeClass()
                 .addClass("contact-status status-online");
             $("#preview-" + user.id).text("online");
+
+            iconChange(user.id)
         })
         .leaving((user) => {
+
+            // console.log(user)
             $("#status-" + user.id)
                 .removeClass()
                 .addClass("contact-status status-offline");
             $("#preview-" + user.id)
                 .text("")
                 .text("offline");
+
+            offlineStatus(user.id)
         });
 
     Echo.private('message-seen').listen(".App\\Events\\MessageSeenEvent", (data) => {
+        // console.log('sd')
+
 
         if (data.message.length !== 0) {
+
+
             if (
                 sender_id == data.message[0].receiver_id &&
                 receiver_id == data.message[0].sender_id
@@ -604,53 +748,95 @@ $(document).ready(function () {
 
     });
     function updateUnseenMessageCount(data) {
+        //   console.log(data.message)
+        var messages = data.message
+        const senderMessages = {};
 
-        var unseenMessageLength = data.message.length;
-        var receiverIdFromDatabase = data.message[0].receiver_id;
-        var senderIdFormDatabase = data.message[0].sender_id
+        messages.sort((a, b) => a.sender_id - b.sender_id);
 
-        if (sender_id == receiverIdFromDatabase) {
-            var unseenMessages = {
-                sender_id: senderIdFormDatabase,
-                receiver_id: receiverIdFromDatabase,
-                count: unseenMessageLength
-            };
-            localStorage.setItem('unseenMessages', JSON.stringify(unseenMessages));
+        messages.forEach(message => {
+
+            if (!(message.sender_id in senderMessages)) {
+                senderMessages[message.sender_id] = [];
+            }
+            senderMessages[message.sender_id].push(message);
+        });
+        // console.log(senderMessages)
+        const senderArray = []
+        for (const senderId in senderMessages) {
+            senderArray.push(senderMessages[senderId]);
         }
+        // console.log(senderArray)
+        var unseenMessagesArray = [];
+        for (var i = 0; i < senderArray.length; i++) {
+            // console.log(senderArray[i].length)
+            var unseenMessageLength = senderArray[i].length;
+            var receiverIdFromDatabase = data.message[0].receiver_id;
+            var senderIdFormDatabase = senderArray[i][0].sender_id
+
+            if (sender_id == receiverIdFromDatabase) {
+                var unseenMessages = {
+                    sender_id: senderIdFormDatabase,
+                    receiver_id: receiverIdFromDatabase,
+                    count: unseenMessageLength
+                };
+                unseenMessagesArray.push(unseenMessages);
+
+            }
+        }
+        localStorage.setItem('unseenMessages', JSON.stringify(unseenMessagesArray));
     }
 
     function updateUnseenMessageUI() {
         var unseenMessages = JSON.parse(localStorage.getItem('unseenMessages'));
-        // console.log(unseenMessages, 'unseenMessages')
 
-        if (unseenMessages) {
-            var unseenNumber = $('.contact#user_' + unseenMessages.sender_id);
+        unseenMessages.forEach((unseenMessage) => {
+            if (unseenMessage) {
+                var unseenNumber = $('.contact#user_' + unseenMessage.sender_id);
 
-            var unseenNumberElement = unseenNumber.find('.unseenNumber');
+                var unseenNumberElement = unseenNumber.find('.unseenNumber');
 
-            if (unseenMessages.count != 0) {
+                if (unseenMessage.count > 0) {
 
-                unseenNumberElement.css({
-                    'display': 'block',
-                    'display': 'flex',
-                    'justifyContent': 'center',
-                    'alignItems': 'center'
-                });
+                    unseenNumberElement.css({
+                        'display': 'block',
+                        'display': 'flex',
+                        'justifyContent': 'center',
+                        'alignItems': 'center'
+                    });
 
-                var ptext = unseenNumberElement.find('p').text(unseenMessages.count);
-            } else {
-                unseenNumberElement.css({
-                    'display': 'none',
-                })
+                    var ptext = unseenNumberElement.find('p').text(unseenMessage.count);
+
+                    // const listItems = $('ul li');
+
+                    // listItems.sort(function (a, b) {
+                    //     const countA = parseInt($(a).find('.unseenNumber p').text());
+                    //     const countB = parseInt($(b).find('.unseenNumber p').text());
+
+                    //     const numA = isNaN(countA) ? -Infinity : countA;
+                    //     const numB = isNaN(countB) ? -Infinity : countB;
+
+                    //     return numB - numA;
+                    // });
+
+                    // // console.log(listItems)
+
+                    // $('ul').append(listItems);
+                } else {
+                    unseenNumberElement.css({
+                        'display': 'none',
+                    })
+                }
             }
-        }
+        })
+
     }
     Echo.private('icon-update').listen(".App\\Events\\SeenIconUpdateEvent", (data) => {
 
         if (sender_id == data.database_senderId &&
             receiver_id == data.database_receiverId) {
 
-            const sentTickIcon = $('.senttime i.fa-check');
+            const sentTickIcon = $('.senttime i');
 
             const svgElement = $('<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" id="double-check"><path fill="#5E94FF" fill-rule="evenodd" d="M16.5303 6.46967C16.8232 6.76256 16.8232 7.23744 16.5303 7.53033L6.53033 17.5303C6.38968 17.671 6.19891 17.75 6 17.75 5.80109 17.75 5.61032 17.671 5.46967 17.5303L1.46967 13.5303C1.17678 13.2374 1.17678 12.7626 1.46967 12.4697 1.76256 12.1768 2.23744 12.1768 2.53033 12.4697L6 15.9393 15.4697 6.46967C15.7626 6.17678 16.2374 6.17678 16.5303 6.46967zM22.5303 6.46966C22.8232 6.76254 22.8232 7.23742 22.5303 7.53032L12.5308 17.5303C12.2379 17.8232 11.7631 17.8232 11.4702 17.5304L9.96975 16.0304C9.67681 15.7376 9.67674 15.2627 9.96959 14.9697 10.2624 14.6768 10.7373 14.6767 11.0303 14.9696L12.0004 15.9394 21.4697 6.46968C21.7625 6.17678 22.2374 6.17677 22.5303 6.46966z" clip-rule="evenodd"></path></svg>');
 
@@ -703,14 +889,18 @@ $(document).ready(function () {
 
             if (storedUnseenMessages !== null) {
 
-                if (data.messageId.sender_id == storedUnseenMessages.sender_id && data.messageId.receiver_id == storedUnseenMessages.receiver_id) {
-                    // console.log('minus')
-                    storedUnseenMessages.count--;
+                for (var i = 0; i < storedUnseenMessages.length; i++) {
+                    if (data.messageId.sender_id == storedUnseenMessages[i].sender_id && data.messageId.receiver_id == storedUnseenMessages[i].receiver_id) {
 
-                    localStorage.setItem('unseenMessages', JSON.stringify(storedUnseenMessages));
+                        storedUnseenMessages[i].count--;
 
-                    updateUnseenMessageUI();
+                        localStorage.setItem('unseenMessages', JSON.stringify(storedUnseenMessages));
+
+                        updateUnseenMessageUI();
+                    }
                 }
+
+
             }
         }
 

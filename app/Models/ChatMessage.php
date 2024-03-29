@@ -15,6 +15,7 @@ class ChatMessage extends Model
         'message',
         'image',
         'message_time',
+        'receiver_status',
         'message_date',
         'updated_at'
     ];
