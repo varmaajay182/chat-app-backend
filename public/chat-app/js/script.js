@@ -1,5 +1,4 @@
 
-var unseenmessages;
 
 $(document).ready(function () {
     // localStorage.removeItem('unseenMessages');
