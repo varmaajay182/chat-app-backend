@@ -23,6 +23,7 @@ class User extends Authenticatable
         'image',
         'password',
         'is_active',
+        'device_token'
     ];
 
     /**

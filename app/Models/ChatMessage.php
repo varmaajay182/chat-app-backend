@@ -14,9 +14,10 @@ class ChatMessage extends Model
         'receiver_id',
         'message',
         'image',
-        'message_time',
-        'receiver_status',
         'message_date',
+        'message_time',
+        'seen_at',
+        'receiver_status',
         'updated_at'
     ];
 }

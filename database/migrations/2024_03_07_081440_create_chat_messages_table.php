@@ -18,9 +18,12 @@ return new class extends Migration
             $table->unsignedBigInteger('receiver_id'); 
             $table->foreign('receiver_id')->references('id')->on('users');
             $table->text('message');
+            $table->string('image')->nullable();
             $table->date('message_date'); 
             $table->time('message_time');
-            $table->timestamps();
+            $table->date('seen_at')->nullable();
+            $table->tinyInteger('receiver_status')->default(0);
+            $table->time('updated_at')->nullable();
         });
     }
 
