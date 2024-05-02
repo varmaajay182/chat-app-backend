@@ -50,7 +50,7 @@
         </div>
 
         <div class="message-input">
-            <form id="getMessage" enctype="multipart/form-data">
+            <form id="sendMessageInput" enctype="multipart/form-data">
                 @csrf
                 <div class="element">
                     <div class="plus-icon">

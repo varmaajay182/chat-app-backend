@@ -262,7 +262,7 @@ class ChatController extends Controller
 
             $deleteMessage->delete();
 
-            return response()->json(['success' => true, 'message' => 'successfully deleted', 'deletedMessage' => $deleteMessage, 'oldData' => $oldData]);
+            return response()->json(['success' => true, 'message' => 'successfully deleted', 'deletedMessage' => $deleteMessage]);
 
         } catch (\Exception $e) {
             Log::error('Error in While deleteMessage:', ['exception' => $e]);
