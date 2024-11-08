@@ -20,7 +20,7 @@ class ChatController extends Controller
     {
         $users = User::whereNotIn('id', [Auth()->user()->id])->get();
         // dd($users);
-        $loginUser = User::where('id', [Auth()->user()->id])->first();
+        $loginUser = User ::where('id', [Auth()->user()->id])->first();
 
         foreach ($users as $user) {
 

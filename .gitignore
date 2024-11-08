@@ -1,11 +1,11 @@
 /.phpunit.cache
-# /node_modules
+/node_modules
 /public/build
 /public/hot
 /public/chat-app/messageImage
 /public/storage
 /storage/*.key
-# /vendor
+/vendor
 # .env
 .env.backup
 .env.production
