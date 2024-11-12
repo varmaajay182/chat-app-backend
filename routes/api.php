@@ -34,7 +34,9 @@ Route::get('/test-token', function (Request $request) {
     }
 });
 
-Route::middleware(['auth:api'])->group(function () {
+Route::post('broadcasting/auth', [AuthController::class, 'authenticate']);
+
+Route::middleware(['jwt.auth'])->group(function () {
     Route::get('user', [AuthController::class, 'user']);
     Route::get('login-user', [ChatController::class, 'loginUser']);
 });

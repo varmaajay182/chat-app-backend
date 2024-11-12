@@ -10,12 +10,5 @@ export default defineConfig({
             ],
             refresh: true,
         }),
-    ],
-    server: {
-        host: '192.168.1.46', 
-        port: 5000, 
-        hmr: {
-            host: '192.168.1.46', 
-        },
-    },
+    ]
 });

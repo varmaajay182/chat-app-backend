@@ -8,6 +8,7 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Broadcast;
 
 class AuthController extends Controller
 {
@@ -65,5 +66,22 @@ class AuthController extends Controller
             \Log::error('Logout failed: ' . $e->getMessage());
             return response()->json(['error' => 'Logout failed'], 500);
         }
+    }
+
+    public function authenticate(Request $request)
+    {
+        // Attempt to authenticate the user with JWT
+        Log::info('Logout called');
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+            if (!$user) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Token not valid'], 401);
+        }
+
+        // Proceed with the default Laravel broadcast authentication
+        return Broadcast::auth($request);
     }
 }
