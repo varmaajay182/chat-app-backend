@@ -20,13 +20,13 @@ class ChatController extends Controller
     {
         $users = User::whereNotIn('id', [Auth()->user()->id])->get();
         // dd($users);
-        $loginUser = User ::where('id', [Auth()->user()->id])->first();
+        $loginUser = User::where('id', [Auth()->user()->id])->first();
 
         foreach ($users as $user) {
 
             $onlineUser = User::where('id', $user['id'])->first();
             // Log::info('online check:', ['data' => $onlineUser]);
-        
+
             if ($onlineUser) {
                 $onlineUser->update([
                     'is_active' => 'no',
@@ -35,6 +35,33 @@ class ChatController extends Controller
         }
 
         return view('chat-app-view.pages.index', ['users' => $users, 'loginUser' => $loginUser]);
+    }
+
+    public function loginUser()
+    {
+        try {
+
+            $users = User::whereNotIn('id', [Auth()->user()->id])->get();
+
+            $loginUser = User::where('id', [Auth()->user()->id])->first();
+
+            foreach ($users as $user) {
+
+                $onlineUser = User::where('id', $user['id'])->first();
+                // Log::info('online check:', ['data' => $onlineUser]);
+
+                if ($onlineUser) {
+                    $onlineUser->update([
+                        'is_active' => 'no',
+                    ]);
+                }
+            }
+
+            return response()->json(['success' => true, 'users' => $users, 'loginUser' => $loginUser]);
+        } catch (\Exception $e) {
+            // Log::error('Error in Save Chat data:', ['exception' => $e]);
+            return response()->json(['error' => 'Error Occurred While Check Data', 'message' => $e->getMessage()], 500);
+        };
     }
 
     public function saveChat(Request $request)
@@ -75,16 +102,16 @@ class ChatController extends Controller
                 $message = $request->message;
                 $imageUrl = null;
             }
-            
-            $user = User::where('id',$request->receiver_id)->first();
 
-            if($user){
+            $user = User::where('id', $request->receiver_id)->first();
+
+            if ($user) {
                 $status = $user->is_active;
             }
 
-            if($status == 'yes'){
+            if ($status == 'yes') {
                 $messageStatus = 1;
-            }else{
+            } else {
                 $messageStatus = 0;
             }
 
@@ -208,14 +235,12 @@ class ChatController extends Controller
                             }
                         }
                     }
-
                 } else {
                     $this->updateMessageSeen($messages);
                 }
             }
 
             return response()->json(['success' => true, 'message' => 'successfully update', 'seenMessage' => $seenMessage]);
-
         } catch (\Exception $e) {
             Log::error('Error in get Old chat:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While get old chat', 'message' => $e->getMessage()], 500);
@@ -240,7 +265,6 @@ class ChatController extends Controller
         event(new SeenIconUpdateEvent($database_senderId, $database_receiverId));
 
         return $unseenMessage;
-
     }
 
     public function deleteMessage(Request $request)
@@ -263,7 +287,6 @@ class ChatController extends Controller
             $deleteMessage->delete();
 
             return response()->json(['success' => true, 'message' => 'successfully deleted', 'deletedMessage' => $deleteMessage]);
-
         } catch (\Exception $e) {
             Log::error('Error in While deleteMessage:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While deleteMessage', 'message' => $e->getMessage()], 500);
@@ -293,7 +316,6 @@ class ChatController extends Controller
             event(new EditMessageEvent($messageInfo));
 
             return response()->json(['success' => true, 'message' => 'successfully update', 'updateMessage' => $messageInfo]);
-
         } catch (\Exception $e) {
             Log::error('Error in While updateing message:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While updateing message', 'message' => $e->getMessage()], 500);
@@ -314,7 +336,6 @@ class ChatController extends Controller
             }
 
             return response()->json(['success' => true, 'message' => 'successfully working']);
-
         } catch (\Exception $e) {
             Log::error('Error in While offline checking:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While offline checking', 'message' => $e->getMessage()], 500);
@@ -329,7 +350,7 @@ class ChatController extends Controller
 
                 $onlineUser = User::where('id', $user['id'])->first();
                 // Log::info('online check:', ['data' => $onlineUser]);
-            
+
                 if ($onlineUser) {
                     $onlineUser->update([
                         'is_active' => 'yes',
@@ -338,30 +359,28 @@ class ChatController extends Controller
             }
 
             return response()->json(['success' => true, 'message' => 'successfully working']);
-
         } catch (\Exception $e) {
             Log::error('Error in While online checking:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While online checking', 'message' => $e->getMessage()], 500);
         }
     }
 
-    public function iconChange(Request $request){
-        try{
+    public function iconChange(Request $request)
+    {
+        try {
 
-            $messages = ChatMessage::where('receiver_id',$request->id)->whereNull('seen_at')->get();
+            $messages = ChatMessage::where('receiver_id', $request->id)->whereNull('seen_at')->get();
 
-            foreach($messages as $message){
+            foreach ($messages as $message) {
                 $message->update([
                     'receiver_status' => 1,
                 ]);
             }
             event(new MessageSeenEvent($messages));
             return response()->json(['success' => true, 'messages' =>  $messages]);
-
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             Log::error('Error in While icon change:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While icon change', 'message' => $e->getMessage()], 500);
         }
     }
-
 }

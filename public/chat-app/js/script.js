@@ -697,7 +697,7 @@ $(document).ready(function () {
     //Chack User Online Or Offline
     Echo.join("status-check")
         .here((user) => {
-            // console.log(user)
+            console.log(user)
             for (var i = 0; i < user.length; i++) {
                 if (sender_id != user[i]["id"]) {
                     //    console.log(user[i])
