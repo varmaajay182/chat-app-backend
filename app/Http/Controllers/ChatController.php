@@ -325,17 +325,19 @@ class ChatController extends Controller
     public function offlineCheck(Request $request)
     {
         try {
+            //Log::info('Received user ID:', ['id' => $request->id]);
 
             $user = User::where('id', $request->id)->first();
-            // Log::info('offline check:', ['data' => $user]);
+            //Log::info('offline check:', ['data' => $user]);
+
 
             if ($user) {
-                $user->update([
-                    'is_active' => 'no',
-                ]);
+
+                $user->is_active = 'no';
+                $user->save();
             }
 
-            return response()->json(['success' => true, 'message' => 'successfully working']);
+            return response()->json(['success' => true, 'message' => 'successfully remove working']);
         } catch (\Exception $e) {
             Log::error('Error in While offline checking:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While offline checking', 'message' => $e->getMessage()], 500);
@@ -349,7 +351,7 @@ class ChatController extends Controller
             foreach ($request->user as $user) {
 
                 $onlineUser = User::where('id', $user['id'])->first();
-                // Log::info('online check:', ['data' => $onlineUser]);
+                //Log::info('online check:', ['data' => $onlineUser]);
 
                 if ($onlineUser) {
                     $onlineUser->update([
@@ -362,6 +364,22 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in While online checking:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While online checking', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getUserById(Request $request, $id)
+    {
+        try {
+            $user = User::find($id);
+
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            return response()->json(['success' => true, 'user' => $user], 200);
+        } catch (\Exception $e) {
+            Log::error('Error in While getting user by id:', ['exception' => $e]);
+            return response()->json(['error' => 'Error in While getting user by id', 'message' => $e->getMessage()], 500);
         }
     }
 

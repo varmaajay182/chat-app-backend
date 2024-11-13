@@ -20,7 +20,6 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 
 
 Broadcast::channel('status-check', function($user){
-    Log::info('User joined presence channel', ['user' => $user]);
     return $user;
 });
 

@@ -43,7 +43,11 @@ class AuthController extends Controller
         //dd($credentials);
 
         if ($token = JWTAuth::attempt($credentials)) {
-            return response()->json(['token' => $token]);
+            $user = JWTAuth::user();
+            return response()->json([
+                'token' => $token,
+                'user' => $user,
+            ]);
         }
 
         return response()->json(['error' => 'Unauthorized'], 401);
@@ -56,13 +60,13 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        Log::info('Logout called');
+        //Log::info('Logout called');
         try {
-            
+
             JWTAuth::invalidate(JWTAuth::getToken());
             return response()->json(['message' => 'Successfully logged out']);
         } catch (\Exception $e) {
-            
+
             \Log::error('Logout failed: ' . $e->getMessage());
             return response()->json(['error' => 'Logout failed'], 500);
         }
@@ -71,7 +75,7 @@ class AuthController extends Controller
     public function authenticate(Request $request)
     {
         // Attempt to authenticate the user with JWT
-        Log::info('Logout called');
+        //Log::info('Logout called');
         try {
             $user = JWTAuth::parseToken()->authenticate();
             if (!$user) {

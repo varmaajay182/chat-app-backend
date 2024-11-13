@@ -35,8 +35,13 @@ Route::get('/test-token', function (Request $request) {
 });
 
 Route::post('broadcasting/auth', [AuthController::class, 'authenticate']);
+Route::post('/offline-check',[ChatController::class,'offlineCheck']);
 
 Route::middleware(['jwt.auth'])->group(function () {
     Route::get('user', [AuthController::class, 'user']);
     Route::get('login-user', [ChatController::class, 'loginUser']);
+    Route::post('/online-check',[ChatController::class,'onlineCheck']);
+    Route::get('/get-user/{id}', [ChatController::class, 'getUserById']);
+    Route::post('/load-chat',[ChatController::class,'loadOldChat']);
+    Route::post('/save-chat',[ChatController::class,'saveChat']);
 });
