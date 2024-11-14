@@ -194,7 +194,6 @@ $(document).ready(function () {
                                 if (el.receiver_status == 1) {
                                     iconClass = "<i class='fa-solid fa-check-double'></i>"
                                 } else {
-
                                     iconClass = "<i class='fa-solid fa-check'></i>"
                                 }
                             }

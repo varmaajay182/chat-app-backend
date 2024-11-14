@@ -44,4 +44,6 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/get-user/{id}', [ChatController::class, 'getUserById']);
     Route::post('/load-chat',[ChatController::class,'loadOldChat']);
     Route::post('/save-chat',[ChatController::class,'saveChat']);
+    Route::post('/icon-change',[ChatController::class,'iconChange']);
+    Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
 });
