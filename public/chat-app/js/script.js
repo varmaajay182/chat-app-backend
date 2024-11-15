@@ -373,9 +373,6 @@ $(document).ready(function () {
 
                         $("#sendMessageInput")[0].reset();
                     })
-
-
-
                 }
             },
 
@@ -627,6 +624,10 @@ $(document).ready(function () {
 
             }
 
+            // console.log(sender_id, 'sender_id')
+            // console.log(data.chatData[0].receiver_id, 'data.chatData[0].receiver_id')
+            // console.log(receiver_id, 'receiver_id');
+            // console.log(data.chatData[0].sender_id, 'data.chatData[0].sender_id')
 
             if (
                 sender_id == data.chatData[0].receiver_id &&
@@ -696,7 +697,7 @@ $(document).ready(function () {
     //Chack User Online Or Offline
     Echo.join("status-check")
         .here((user) => {
-            console.log(user)
+            // console.log(user)
             for (var i = 0; i < user.length; i++) {
                 if (sender_id != user[i]["id"]) {
                     //    console.log(user[i])
@@ -843,7 +844,10 @@ $(document).ready(function () {
 
     //User Seen Message Seen Icon Blue At that time
     Echo.private('icon-update').listen(".App\\Events\\SeenIconUpdateEvent", (data) => {
-
+       console.log(sender_id, 'sender_idsender_id')
+       console.log(data.database_senderId, 'data.database_senderIddata.database_senderId')
+       console.log(receiver_id, 'receiver_id')
+       console.log(data.database_receiverId, 'data.database_receiverIddata.database_receiverId')
         if (sender_id == data.database_senderId &&
             receiver_id == data.database_receiverId) {
 

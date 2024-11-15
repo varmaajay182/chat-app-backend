@@ -19,11 +19,13 @@ class SeenIconUpdateEvent implements ShouldBroadcast
      */
     public $database_senderId;
     public $database_receiverId;
+    public $unseenMessage;
 
-    public function __construct($database_senderId,$database_receiverId)
+    public function __construct($database_senderId,$database_receiverId, $unseenMessage)
     {
        $this->database_senderId = $database_senderId;
        $this->database_receiverId = $database_receiverId;
+       $this->unseenMessage = $unseenMessage;
     }
 
     /**

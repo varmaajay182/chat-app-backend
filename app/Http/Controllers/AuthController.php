@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -38,20 +39,49 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        try {
 
-        //dd($credentials);
-
-        if ($token = JWTAuth::attempt($credentials)) {
-            $user = JWTAuth::user();
-            return response()->json([
-                'token' => $token,
-                'user' => $user,
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|string|email',
+                'password' => 'required|string',
             ]);
-        }
 
-        return response()->json(['error' => 'Unauthorized'], 401);
+
+            if ($validator->fails()) {
+                // Get the first error for each field and return it
+                $errors = $validator->errors()->toArray();
+
+                $flattened_errors = array_merge(...array_values($errors));
+
+                // Reindex the errors starting from 0
+                $reindexed_errors = array_values($flattened_errors);
+
+                return response()->json([
+                    'errors' => $reindexed_errors[0] // Return only the first error for each field
+                ], 400);
+            }
+
+            $credentials = $request->only('email', 'password');
+
+            if ($token = JWTAuth::attempt($credentials)) {
+                $user = JWTAuth::user();
+                return response()->json([
+                    'token' => $token,
+                    'user' => $user,
+                ], 200);
+            }
+
+            return response()->json(['error' => 'Invalid email or password'], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Something went wrong. Please try again later.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
+
+
+
 
     public function user(Request $request)
     {

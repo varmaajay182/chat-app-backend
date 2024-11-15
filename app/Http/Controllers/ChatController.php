@@ -125,6 +125,7 @@ class ChatController extends Controller
                         'receiver_status' => $messageStatus,
                         'message_date' => $currentDate,
                         'message_time' => $currentTime,
+                        'seen_at' => null,
                         'updated_at' => null,
                     ]);
 
@@ -139,6 +140,7 @@ class ChatController extends Controller
                     'receiver_status' => $messageStatus,
                     'message_date' => $currentDate,
                     'message_time' => $currentTime,
+                    'seen_at' => null,
                     'updated_at' => null,
                 ]);
 
@@ -162,8 +164,8 @@ class ChatController extends Controller
             $unseenMessage = ChatMessage::where('receiver_id', $request->receiver_id)
                 ->whereNull('seen_at')
                 ->get();
-
-            event(new MessageSeenEvent($unseenMessage));
+            Log::info('online check:', ['data' => $unseenMessage]);
+          //  event(new MessageSeenEvent($unseenMessage));
 
             return response()->json(['success' => true, 'oldData' => $oldData, 'data' => $chatArray, 'user' => $user]);
         } catch (\Exception $e) {
@@ -262,7 +264,7 @@ class ChatController extends Controller
         $database_senderId = $message['sender_id'];
         $database_receiverId = $message['receiver_id'];
 
-        event(new SeenIconUpdateEvent($database_senderId, $database_receiverId));
+        event(new SeenIconUpdateEvent($database_senderId, $database_receiverId, $unseenMessage));
 
         return $unseenMessage;
     }
