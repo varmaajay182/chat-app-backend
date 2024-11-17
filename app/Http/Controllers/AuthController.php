@@ -19,22 +19,54 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+
+            $errors = $validator->errors()->toArray();
+
+            $flattened_errors = array_merge(...array_values($errors));
+
+            $reindexed_errors = array_values($flattened_errors);
+
+            return response()->json([
+                'errors' => $reindexed_errors[0]
+            ], 400);
         }
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        try {
 
-        $token = JWTAuth::fromUser($user);
+            $imageName = '';
 
-        return response()->json(['token' => $token], 201);
+            if ($request->hasFile('image')) {
+                $imageName = time() . '.' . $request->image->extension();
+                $request->image->move(public_path('chat-app/image'), $imageName);
+                $imageName = 'image/' . $imageName;
+            } else {
+                $imageName = 'image/default-image.jpg';
+            }
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'image' => $imageName,
+                'password' => Hash::make($request->password),
+            ]);
+
+            $token = JWTAuth::fromUser($user);
+
+            return response()->json([
+                'token' => $token,
+                'user' => $user,
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Something went wrong. Please try again later.',
+                'message' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function login(Request $request)
@@ -48,16 +80,15 @@ class AuthController extends Controller
 
 
             if ($validator->fails()) {
-                // Get the first error for each field and return it
+
                 $errors = $validator->errors()->toArray();
 
                 $flattened_errors = array_merge(...array_values($errors));
 
-                // Reindex the errors starting from 0
                 $reindexed_errors = array_values($flattened_errors);
 
                 return response()->json([
-                    'errors' => $reindexed_errors[0] // Return only the first error for each field
+                    'errors' => $reindexed_errors[0]
                 ], 400);
             }
 
@@ -80,9 +111,6 @@ class AuthController extends Controller
         }
     }
 
-
-
-
     public function user(Request $request)
     {
         return response()->json(auth()->user());
@@ -104,7 +132,6 @@ class AuthController extends Controller
 
     public function authenticate(Request $request)
     {
-        // Attempt to authenticate the user with JWT
         //Log::info('Logout called');
         try {
             $user = JWTAuth::parseToken()->authenticate();
@@ -115,7 +142,6 @@ class AuthController extends Controller
             return response()->json(['error' => 'Token not valid'], 401);
         }
 
-        // Proceed with the default Laravel broadcast authentication
         return Broadcast::auth($request);
     }
 }

@@ -3,6 +3,7 @@
 /public/build
 /public/hot
 /public/chat-app/messageImage
+/public/chat-app/image
 /public/storage
 /storage/*.key
 /vendor
