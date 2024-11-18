@@ -67,6 +67,9 @@ class ChatController extends Controller
     public function saveChat(Request $request)
     {
         try {
+
+            Log::info('save chat:', ['data' => $request->all()]);
+
             $time = Carbon::now();
             $currentTimeDate = Carbon::parse($time)
                 ->setTimezone('Asia/Kolkata')
@@ -86,14 +89,14 @@ class ChatController extends Controller
                     $image = $request->file('image');
                     $imageName = time() . '_' . $image->getClientOriginalName();
                     $image->move(public_path('chat-app/messageImage'), $imageName);
-                    $imageUrl = '/chat-app/messageImage/' . $imageName;
+                    $imageUrl = 'messageImage/' . $imageName;
                     $images[] = $imageUrl;
                 } else {
 
                     foreach ($request->file('image') as $image) {
                         $imageName = time() . '_' . $image->getClientOriginalName();
                         $image->move(public_path('chat-app/messageImage'), $imageName);
-                        $imageUrl = '/chat-app/messageImage/' . $imageName;
+                        $imageUrl = 'messageImage/' . $imageName;
                         $images[] = $imageUrl;
                     }
                 }
@@ -164,7 +167,7 @@ class ChatController extends Controller
             $unseenMessage = ChatMessage::where('receiver_id', $request->receiver_id)
                 ->whereNull('seen_at')
                 ->get();
-            Log::info('online check:', ['data' => $unseenMessage]);
+            //Log::info('save chat:', ['data' => $unseenMessage]);
           //  event(new MessageSeenEvent($unseenMessage));
 
             return response()->json(['success' => true, 'oldData' => $oldData, 'data' => $chatArray, 'user' => $user]);
@@ -300,7 +303,7 @@ class ChatController extends Controller
         try {
 
             $messageInfo = ChatMessage::where('id', $request->editMessageId)->first();
-
+            Log::info('update:', ['data' => $request->all()]);
             $time = Carbon::now();
             $currentTimeDate = Carbon::parse($time)
                 ->setTimezone('Asia/Kolkata')
