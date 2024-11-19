@@ -47,4 +47,5 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/icon-change',[ChatController::class,'iconChange']);
     Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
     Route::post('/update-message',[ChatController::class,'updateMessage']);
+    Route::post('/delete-message',[ChatController::class,'deleteMessage']);
 });

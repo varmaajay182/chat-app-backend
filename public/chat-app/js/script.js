@@ -737,8 +737,12 @@ $(document).ready(function () {
     Echo.private('message-seen').listen(".App\\Events\\MessageSeenEvent", (data) => {
         // console.log('sd')
         if (data.message.length !== 0) {
-
-
+            
+            // console.log(sender_id, 'sender_idsender_id')
+            // console.log(data.message[0].receiver_id, 'data.message[0].receiver_id')
+            // console.log(receiver_id, 'receiver_idreceiver_id')
+            // console.log(data.message[0].sender_id, 'data.message[0].sender_iddata.message[0].sender_id')
+ 
             if (
                 sender_id == data.message[0].receiver_id &&
                 receiver_id == data.message[0].sender_id
@@ -746,6 +750,8 @@ $(document).ready(function () {
                 
             }
             else {
+
+                console.log('hello')
 
                 updateUnseenMessageCount(data);
 
@@ -762,7 +768,7 @@ $(document).ready(function () {
         const senderMessages = {};
 
         messages.sort((a, b) => a.sender_id - b.sender_id);
-
+// console.log(messages, 'messagesmgesasasas')
         messages.forEach(message => {
 
             if (!(message.sender_id in senderMessages)) {
@@ -793,6 +799,8 @@ $(document).ready(function () {
 
             }
         }
+
+        console.log(unseenMessagesArray, 'unseenMessagesArrayunseenMessagesArrayunseenMessagesArray')
         localStorage.setItem('unseenMessages', JSON.stringify(unseenMessagesArray));
     }
 
@@ -844,10 +852,10 @@ $(document).ready(function () {
 
     //User Seen Message Seen Icon Blue At that time
     Echo.private('icon-update').listen(".App\\Events\\SeenIconUpdateEvent", (data) => {
-       console.log(sender_id, 'sender_idsender_id')
-       console.log(data.database_senderId, 'data.database_senderIddata.database_senderId')
-       console.log(receiver_id, 'receiver_id')
-       console.log(data.database_receiverId, 'data.database_receiverIddata.database_receiverId')
+    //    console.log(sender_id, 'sender_idsender_id')
+    //    console.log(data.database_senderId, 'data.database_senderIddata.database_senderId')
+    //    console.log(receiver_id, 'receiver_id')
+    //    console.log(data.database_receiverId, 'data.database_receiverIddata.database_receiverId')
         if (sender_id == data.database_senderId &&
             receiver_id == data.database_receiverId) {
 

@@ -68,7 +68,7 @@ class ChatController extends Controller
     {
         try {
 
-            Log::info('save chat:', ['data' => $request->all()]);
+            //Log::info('save chat:', ['data' => $request->all()]);
 
             $time = Carbon::now();
             $currentTimeDate = Carbon::parse($time)
@@ -168,7 +168,7 @@ class ChatController extends Controller
                 ->whereNull('seen_at')
                 ->get();
             //Log::info('save chat:', ['data' => $unseenMessage]);
-          //  event(new MessageSeenEvent($unseenMessage));
+            event(new MessageSeenEvent($unseenMessage));
 
             return response()->json(['success' => true, 'oldData' => $oldData, 'data' => $chatArray, 'user' => $user]);
         } catch (\Exception $e) {
@@ -276,7 +276,9 @@ class ChatController extends Controller
     {
         try {
 
+            //Log::info('delete message:', ['data' => $request->all()]);
             $deleteMessage = ChatMessage::where('id', $request->id)->first();
+
 
             $oldData = ChatMessage::where(function ($query) use ($request) {
                 $query->where('sender_id', '=', $request->senderId)
@@ -286,6 +288,8 @@ class ChatController extends Controller
                     ->orWhere('receiver_id', '=', $request->receiverId);
             })->where('message_date', $deleteMessage->message_date)
                 ->get();
+
+                //Log::info('oldData:', ['data' => $oldData]);
 
             event(new DeleteMessageEvent($deleteMessage, $oldData));
 
@@ -303,7 +307,7 @@ class ChatController extends Controller
         try {
 
             $messageInfo = ChatMessage::where('id', $request->editMessageId)->first();
-            Log::info('update:', ['data' => $request->all()]);
+          //  Log::info('update:', ['data' => $request->all()]);
             $time = Carbon::now();
             $currentTimeDate = Carbon::parse($time)
                 ->setTimezone('Asia/Kolkata')
