@@ -712,7 +712,7 @@ $(document).ready(function () {
 
         })
         .joining((user) => {
-            // console.log(user)
+            
             $("#status-" + user.id)
                 .removeClass()
                 .addClass("contact-status status-online");
