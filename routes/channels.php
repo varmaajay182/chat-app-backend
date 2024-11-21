@@ -43,3 +43,7 @@ Broadcast::channel('delete-message', function($user){
 Broadcast::channel('edit-message-handle', function($user){
     return $user;
 });
+
+Broadcast::channel('voice-call.{userId}', function ($user, $userId) {
+    return (int) $user->id == (int) $userId;
+});

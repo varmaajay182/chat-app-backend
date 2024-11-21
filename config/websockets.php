@@ -11,6 +11,8 @@ return [
         'port' => env('LARAVEL_WEBSOCKETS_PORT', 6001),
     ],
 
+    //'host' => '192.168.1.46', 
+
     /*
      * This package comes with multi tenancy out of the box. Here you can
      * configure the different apps that can use the webSockets server.

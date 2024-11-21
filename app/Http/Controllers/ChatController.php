@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\CallAcceptedEvent;
+use App\Events\CallRejectedEvent;
 use App\Events\DeleteMessageEvent;
 use App\Events\EditMessageEvent;
 use App\Events\MessageHandelEvent;
 use App\Events\MessageSeenEvent;
 use App\Events\SeenIconUpdateEvent;
+use App\Events\VoiceCallRequest;
 use App\Models\ChatMessage;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ChatController extends Controller
 {
@@ -409,5 +413,63 @@ class ChatController extends Controller
             Log::error('Error in While icon change:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While icon change', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function initiateCall(Request $request)
+    {
+        //Log::info('initiateCall:', ['data' => $request->all()]);
+        $validated = $request->validate([
+            'from_user_id' => 'required',
+            'to_user_id' => 'required',
+        ]);
+
+        $user = User::find($validated['from_user_id']);
+
+        broadcast(new VoiceCallRequest($validated['from_user_id'], $validated['to_user_id'], $user));
+
+        return response()->json(['message' => 'Call initiated']);
+    }
+
+    public function acceptCall(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'from_user_id' => 'required|exists:users,id',
+            'to_user_id' => 'required|exists:users,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        $user = User::find($request->from_user_id);
+
+        // Broadcast call acceptance to caller
+        broadcast(new CallAcceptedEvent([
+            'fromUserId' => $request->from_user_id,
+            'toUserId' => $request->to_user_id,
+            'fromUser' => $user
+        ]))->toOthers();
+
+        return response()->json(['message' => 'Call accepted'], 200);
+    }
+
+    public function rejectCall(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'from_user_id' => 'required|exists:users,id',
+            'to_user_id' => 'required|exists:users,id'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 400);
+        }
+
+        // Broadcast call rejection to caller
+        broadcast(new CallRejectedEvent([
+            'fromUserId' => $request->from_user_id,
+            'toUserId' => $request->to_user_id
+        ]))->toOthers();
+
+        return response()->json(['message' => 'Call rejected'], 200);
     }
 }

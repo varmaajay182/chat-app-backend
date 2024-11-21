@@ -5,6 +5,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatController;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Http\Controllers\WebRTCController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -48,4 +50,11 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
     Route::post('/update-message',[ChatController::class,'updateMessage']);
     Route::post('/delete-message',[ChatController::class,'deleteMessage']);
+    
+    
+    Route::prefix('voice-call')->group(function () {
+        Route::post('initiate', [ChatController::class, 'initiateCall'  ]);
+        Route::post('accept', [ChatController::class, 'acceptCall']);
+        Route::post('reject', [ChatController::class, 'rejectCall']);
+    });
 });

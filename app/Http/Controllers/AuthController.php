@@ -60,7 +60,6 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => $user,
             ], 200);
-            
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Something went wrong. Please try again later.',
@@ -104,6 +103,12 @@ class AuthController extends Controller
 
             return response()->json(['error' => 'Invalid email or password'], 400);
         } catch (\Exception $e) {
+
+            Log::error('Login Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'error' => 'Something went wrong. Please try again later.',
                 'message' => $e->getMessage(),
@@ -125,7 +130,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Successfully logged out']);
         } catch (\Exception $e) {
 
-            \Log::error('Logout failed: ' . $e->getMessage());
+            Log::error('Logout failed: ' . $e->getMessage());
             return response()->json(['error' => 'Logout failed'], 500);
         }
     }
