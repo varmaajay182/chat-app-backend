@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
@@ -22,12 +23,12 @@ class VoiceCallRequest implements ShouldBroadcast
 
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
-        return new Channel('voice-call.' . $this->toUserId);
+        return new PrivateChannel('voice-call.' . $this->toUserId);
     }
 
-    public function broadcastWith()
+    public function broadcastWith(): array
     {
         return [
             'fromUserId' => $this->fromUserId,

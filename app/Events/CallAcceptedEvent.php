@@ -14,7 +14,9 @@ class CallAcceptedEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    /**
+     * Create a new event instance.
+     */
 
     public $callData;
 
@@ -23,17 +25,28 @@ class CallAcceptedEvent implements ShouldBroadcast
         $this->callData = $callData;
     }
 
-    public function broadcastOn()
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
+
+    public function broadcastOn(): array
     {
-        return new Channel('voice-call.' . $this->callData['fromUserId']);
+
+        return [
+            new Channel('voice-call-accept'),
+        ];
+
+        //return new PrivateChannel('voice-call-accept');
     }
 
-    public function broadcastWith()
+    /* public function broadcastWith()
     {
         return [
             'toUserId' => $this->callData['toUserId'],
             'status' => 'accepted',
             'message' => 'Call Accepted'
         ];
-    }
+    } */
 }

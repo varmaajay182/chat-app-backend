@@ -21,18 +21,22 @@ class CallRejectedEvent implements ShouldBroadcast
         $this->callData = $callData;
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
-        // Broadcast to caller's channel
-        return new Channel('voice-call.' . $this->callData['fromUserId']);
+
+        return [
+            new Channel('voice-call-end'),
+        ];
+
+        //return new PrivateChannel('voice-call-accept');
     }
 
-    public function broadcastWith()
+   /* public function broadcastWith(): array
     {
         return [
             'toUserId' => $this->callData['toUserId'],
             'status' => 'rejected',
             'message' => 'Call Rejected'
         ];
-    }
+    } */
 }

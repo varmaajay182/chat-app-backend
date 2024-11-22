@@ -441,13 +441,10 @@ class ChatController extends Controller
             return response()->json(['error' => $validator->errors()], 400);
         }
 
-        $user = User::find($request->from_user_id);
-
         // Broadcast call acceptance to caller
         broadcast(new CallAcceptedEvent([
             'fromUserId' => $request->from_user_id,
             'toUserId' => $request->to_user_id,
-            'fromUser' => $user
         ]))->toOthers();
 
         return response()->json(['message' => 'Call accepted'], 200);

@@ -41,9 +41,21 @@ Broadcast::channel('delete-message', function($user){
 });
 
 Broadcast::channel('edit-message-handle', function($user){
+    //Log::info('edit-message-hand:', ['data' => $user]);
     return $user;
 });
 
 Broadcast::channel('voice-call.{userId}', function ($user, $userId) {
+    Log::info('voice-call.{userId:', ['data' => $user->id, 'userId' => $userId]);
     return (int) $user->id == (int) $userId;
+});   
+
+Broadcast::channel('voice-call-accept', function($user){
+    //Log::info('edit-message-hand:', ['data' => $user]);
+    return $user;
+});
+
+Broadcast::channel('voice-call-end', function($user){
+    //Log::info('edit-message-hand:', ['data' => $user]);
+    return $user;
 });
