@@ -9,6 +9,7 @@ use App\Events\EditMessageEvent;
 use App\Events\MessageHandelEvent;
 use App\Events\MessageSeenEvent;
 use App\Events\SeenIconUpdateEvent;
+use App\Events\TypingEvent;
 use App\Events\VoiceCallRequest;
 use App\Models\ChatMessage;
 use App\Models\User;
@@ -293,7 +294,7 @@ class ChatController extends Controller
             })->where('message_date', $deleteMessage->message_date)
                 ->get();
 
-                //Log::info('oldData:', ['data' => $oldData]);
+            //Log::info('oldData:', ['data' => $oldData]);
 
             event(new DeleteMessageEvent($deleteMessage, $oldData));
 
@@ -311,7 +312,7 @@ class ChatController extends Controller
         try {
 
             $messageInfo = ChatMessage::where('id', $request->editMessageId)->first();
-          //  Log::info('update:', ['data' => $request->all()]);
+            //  Log::info('update:', ['data' => $request->all()]);
             $time = Carbon::now();
             $currentTimeDate = Carbon::parse($time)
                 ->setTimezone('Asia/Kolkata')
@@ -412,6 +413,22 @@ class ChatController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in While icon change:', ['exception' => $e]);
             return response()->json(['error' => 'Error Occurred While icon change', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function typingShow(Request $request)
+    {
+        try {
+
+            event(new TypingEvent($request->senderId, $request->receiverId, $request->isTyping));
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->isTyping ? "User typing" : "Stopped typing"
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in while typing:', ['exception' => $e]);
+            return response()->json(['error' => 'Error in while typing', 'message' => $e->getMessage()], 500);
         }
     }
 

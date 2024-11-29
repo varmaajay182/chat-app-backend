@@ -50,11 +50,12 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/update-unseenmessage',[ChatController::class,'updateUnseen']);
     Route::post('/update-message',[ChatController::class,'updateMessage']);
     Route::post('/delete-message',[ChatController::class,'deleteMessage']);
-    
+    Route::post('/typing',[ChatController::class,'typingShow']);
     
     Route::prefix('voice-call')->group(function () {
         Route::post('initiate', [ChatController::class, 'initiateCall'  ]);
         Route::post('accept', [ChatController::class, 'acceptCall']);
         Route::post('reject', [ChatController::class, 'rejectCall']);
     });
+    
 });

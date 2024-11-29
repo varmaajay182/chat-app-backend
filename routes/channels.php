@@ -59,3 +59,7 @@ Broadcast::channel('voice-call-end', function($user){
     //Log::info('edit-message-hand:', ['data' => $user]);
     return $user;
 });
+
+Broadcast::channel('typing.{receiverId}', function ($user, $receiverId) {
+    return $user->id == (int)$receiverId || true;
+});
